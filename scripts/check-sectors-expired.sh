@@ -36,7 +36,7 @@ SectorsKeyInfo=$ScriptPath/SectorsKeyInfo
 awk '/SectorID/ {SectorID=$2} /Status/ {Status=$2} /TicketH/ {TicketH=$2} /Deals/ {Deals=$2" "$3} /SealGroupID/ {SealGroupID=$2} /StartEpoch/ {StartEpoch=$7} /event;sealing.SectorTicket/ {print SectorID,Status,TicketH,Deals,SealGroupID,StartEpoch;SectorID="";Status="";TicketH="";Deals="";SealGroupID="";StartEpoch=""}' $SectorsDetailInfo >> $SectorsKeyInfo
 #当前最新区块高度
 LatestBlockHeight=`lotus chain getblock $(lotus chain head 2>/dev/null| head -n 1) 2>/dev/null | jq .Height`
-#需要保证完成封装的开始高度，视情况而定。p1阶段6个小时，p2阶段20分钟���然后提交p2上链消息预质押币到waitseed阶段，等待75分钟。c2阶段20分钟，提交C2上链消息质押币，然后落盘10分钟Proving证明阶段。平均整个过程需要8个小时零5分钟
+#需要保证完成封装的开始高度，视情况而定。p1阶段6个小时，p2阶段20分钟，然后提交p2上链消息预质押币到waitseed阶段，等待75分钟。c2阶段20分钟，提交C2上链消息质押币，然后落盘10分钟Proving证明阶段。平均整个过程需要8个小时零5分钟
 let RequirePledgeMinHeight=$LatestBlockHeight+0
 mkdir -p $ScriptPath/ExpiredSectors && [ -f $ScriptPath/ExpiredSectors/ExpiredSectors ] && mv $ScriptPath/ExpiredSectors/ExpiredSectors $ScriptPath/ExpiredSectors/${Current}-ExpiredSectors
 mkdir -p $ScriptPath/No-ExpireSectors && [ -f $ScriptPath/No-ExpireSectors/No-ExpireSectors ] && mv $ScriptPath/No-ExpireSectors/No-ExpireSectors $ScriptPath/No-ExpireSectors/${Current}-No-ExpireSectors
