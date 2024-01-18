@@ -1,0 +1,106 @@
+venus相关链接资料
+https://damocles.venus-fil.io/operation/#preparation
+https://github.com/ipfs-force-community/Damocles
+https://sophon.venus-fil.io/zh/operation/venus-wallet.html#%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8
+
+github下拉代码
+git clone https://github.com/ipfs-force-community/damocles.git
+git clone https://github.com/filecoin-project/venus-wallet.git
+
+如果之前有下拉代码的环境，执行更新,如果没有，需要先部署安装需要依赖的环境，再执行如下操作
+cd damocles
+git pull
+编译
+git branch  #查看当前的分支
+git status  #查看当前分支的状态
+git checkout v0.9.1  #切换到指定的版本
+make all #编译安装
+
+如果之前有下拉代码的环境，执行更新，如果没有，需要先部署安装需要依赖的环境，再执行如下操作
+cd venus-wallet
+git pull
+git branch
+git status
+git checkout v1.14.0
+make
+
+
+venus各程序的版本升级：
+查看程序的版本
+damocles-manager -v
+damocles-worker -V
+venus-wallet -v
+加载damocles的环境变量
+export DAMOCLES_PATH=/opt/raid0/damocles/damocles-manager
+查看节点的窗口
+damocles-manager util sealer proving --miner=f0716775 deadlines
+查看节点的当前抽查的窗口信息
+damocles-manager util sealer proving --miner=f0716775 info
+注意：
+       升级版本前，应该衡量考虑有足够的时间来完成该版本的升级，保证窗口的抽查能够正常上链！！！！！！！！！！！！！！！！！！！！！！！！！！！
+查看程序的软连接
+ls -l `which damocles-manager damocles-worker`
+备份老版本的程序
+kill -9 `pgrep damocles-manage`
+pkill -9 damocles-worker
+mv /opt/raid0/damocles/damocles-manager/bin/damocles-manager /opt/raid0/damocles/damocles-manager/bin/damocles-manager-`date +%Y%m%d%H%M%S`
+mv /opt/raid0/damocles/damocles-worker/bin/damocles-worker  /opt/raid0/damocles/damocles-worker/bin/damocles-worker-`date +%Y%m%d%H%M%S`
+拷贝新的版本程序到相应路径
+cp /opt/raid0/github/damocles/dist/bin/damocles-manager /opt/raid0/damocles/damocles-manager/bin/damocles-manager
+cp /opt/raid0/github/damocles/dist/bin/damocles-worker /opt/raid0/damocles/damocles-worker/bin/damocles-worker
+启动程序
+bash /opt/raid0/damocles/start_damocles.sh
+bash /opt/raid0/damocles/start_damocles-worker.sh
+编辑venus钱包/opt/raid0/damocles/venus-wallet/config.toml配置
+# Default config:
+[API]
+  ListenAddress = "/ip4/127.0.0.1/tcp/5678/http"
+
+[DB]
+  Conn = "/opt/raid0/damocles/venus-wallet/keystore.sqlit"
+  Type = "sqlite"
+  DebugMode = true
+
+[JWT]
+  Token = ""   #该项配置参数为空，启动会新生成
+  Secret = ""  #该项配置参数为空，启动会
+
+[Factor]
+  ScryptN = 262144
+  ScryptP = 1
+
+[SignFilter]
+  Expr = ""
+
+[APIRegisterHub]
+  RegisterAPI = ["/dns/gateway.filincubator.com/tcp/83/wss"]
+  Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZHVkdSIsInBlcm0iOiJ3cml0ZSIsImV4dCI6IiJ9.XiZj23AEa6BkMKS81EqRUdysD7NSMA-jDGTb4EpujSk"
+  SupportAccounts = ["dudu"]
+查看程序的软连接
+ls -l `which venus-wallet`
+备份后，新版本启动
+kill -9 `pgrep venus-wallet`
+mv /opt/raid0/damocles/venus-wallet/bin/venus-wallet /opt/raid0/damocles/venus-wallet/bin/venus-wallet-`date +%Y%m%d%H%M%S`
+mv /opt/raid0/damocles/venus-wallet/keystore.sqlit  /opt/raid0/damocles/venus-wallet/keystore.sqlit-`date +%Y%m%d%H%M%S`
+cp /opt/raid0/github/venus-wallet/venus-wallet /opt/raid0/damocles/venus-wallet/bin/venus-wallet
+bash /opt/raid0/damocles/start_wallet.sh
+加载venus钱包的环境变量
+export VENUS_WALLET_PATH=/opt/raid0/damocles/venus-wallet
+设置密码
+venus-wallet set-password
+解锁钱包
+venus-wallet unlock
+查看钱包状态
+venus-wallet lock-state
+导出worker、control钱包的密钥
+lotus wallet list -id
+lotus wallet export f3smmt3ts63yt75gfxofvoreffkp43ih3ywxhr2kp5kmudcoykpumgps65ssbmyhj5l46f5tdrtspfvmn77yba
+导入钱包地址
+venus-wallet import
+查看钱包地址
+venus-wallet list
+最后，检查确认版本，查看节点抽查的窗口是否能够正常上链
+damocles-manager -v
+damocles-worker -V
+venus-wallet -v
+
