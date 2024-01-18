@@ -211,7 +211,7 @@ lotus net connect   /ip4/37.245.8.244/tcp/24007/p2p/12D3KooWK2TjpM9mk6WPL1wV6mGY
 #查看指定prees_id
 lotus net findpeer   prees_id
 
-#获取lotus灯塔的连接tonke
+#获取lotus灯塔的连接token
 lotus auth api-info --perm admin 
 
 # 消息堵塞检查与疏通
