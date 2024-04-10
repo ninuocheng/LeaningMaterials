@@ -1,0 +1,14 @@
+---
+- hosts: 172.25.10.3
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: "拷贝参数文件到目标服务器上"
+       copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: 0644
+       with_items:
+            - { src: "/data/filecoin-parents", dest: "/opt/raid0/" }
