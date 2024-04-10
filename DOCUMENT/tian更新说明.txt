@@ -4,8 +4,8 @@ bash /data/titan-nft/deploy/deploy-titan-web.sh
 
 2登录tian容器平台 点击 Deployments 
 网址：https://container-web.container1.titannet.io/
-用户：angel@titannet.io
-密码：anqi777.
+用户：本地电脑查看
+密码：本地电脑查看
 
 
 
@@ -14,7 +14,7 @@ bash /data/titan-nft/deploy/deploy-titan-web.sh
 
 
 4.清理cdn缓存
-登录亚马逊 网站：https://us-east-1.console.aws.amazon.com/cloudfront/v4/home?region=ap-south-1#/distributions  用户：devops_yw@usmartwin.com 密码：LUCYliq1w2e3
+登录亚马逊 网站：https://us-east-1.console.aws.amazon.com/cloudfront/v4/home?region=ap-south-1#/distributions  用户：本地电脑查看 密码：本地电脑查看
 找到CloudFront 分配  看备用域名列 进去titannet.io 和 www.titannet.io 点击失效  创建失效  添加对象路径 /*
 
 更新所对应的脚本
