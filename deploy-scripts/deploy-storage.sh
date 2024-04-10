@@ -181,7 +181,7 @@ export NVM_DIR="$HOME/.nvm"
 
 #拉取代码
 echoGreen "开始拉去代码"
-cd $git_dir/storage-image-deployment  && rm -rf dist && git checkout . && git pull &&  git checkout master
+cd $git_dir/storage-image-deployment  && rm -rf dist && git checkout . && git pull &&  git checkout test1
 if [ $? -eq 0 ];then
         echoGreen "拉取代码成功......."
 else
@@ -190,7 +190,7 @@ else
 fi
 
 #查看分支是否切换成功
-git_branch=`git branch   | head -1`
+git_branch=`git branch   | grep "*"`
 echoGreen  "当前分支为: $git_branch"
 
 

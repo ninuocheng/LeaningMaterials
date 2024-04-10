@@ -52,7 +52,7 @@ cd $git_dir/music-nft-admin  && git pull  &&  git checkout main
 git_branch=`git branch   | head -1`
 echoGreen  "当前分支为: $git_branch"
 echoGreen "开始编译代码"
-pnpm i && pnpm build
+/usr/local/node/bin/pnpm i && /usr/local/node/bin/pnpm build
 
 if [ $? -eq 0 ];then
     echoGreen "代码编译成功 准备封装docker镜像......."

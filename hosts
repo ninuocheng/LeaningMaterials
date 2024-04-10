@@ -1,9 +1,0 @@
-127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-10.10.0.99 master01
-10.10.1.99 master02
-10.10.0.77 master03
-10.10.1.77 master04
-10.10.2.77 master05
-10.10.2.99 node01
-10.10.3.99 node02

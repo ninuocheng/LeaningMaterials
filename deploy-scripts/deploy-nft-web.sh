@@ -65,10 +65,8 @@ echoGreen  "当前分支为: $git_branch"
 
 echoGreen '开始编译代码'
 echoGreen "代码编译目录：`pwd`"
-export NODEJS=/usr/local/node
-export PATH=$PATH:$NODEJS/bin
-npm i
-npm run  build
+/usr/local/node/bin/npm i
+/usr/local/node/bin/npm run  build
 if [ $? -eq 0 ];then
     echoGreen "代码编译成功 准备封装docker镜像......."
     echoGreen "生成镜像"
