@@ -1,0 +1,709 @@
+############lotus灯塔
+看父区是多少秒收到的
+grep 2021-12-08T20:24 /opt/raid0/lotus/logs | grep delay   
+
+#nfs挂载盘有问题
+strace df -h                                             
+###nfs服务起不来
+sync && echo 3 > /proc/sys/vm/drop_caches
+                 
+
+#系统只读，重新挂载根
+mount -o remount,rw /
+
+#查看磁盘sm码
+lsblk -do name,serial
+
+#lotus发单
+export FIL_PROOFS_USE_MULTICORE_SDR=1
+export LOTUS_RCMGR=0
+
+#回收发单失败的额度
+lotus filplus remove-expired-allocations   f1gk7n4ckn23ix2bu7q6qtas6eayambn57ass2zfq 
+
+#添加默认路由
+ip route add default via 10.17.0.1 
+
+#lotus官方miner，关闭爆块和抽查功能
+DisableBuiltinWindowPoSt = false
+DisableBuiltinWinningPoSt = false
+
+#lotus检索
+#指定订单编号查看
+lotus state get-deal   22192755
+#指定节点和订单标致检索
+lotus client retrieve --provider f01777777 bafybeigj74kjxjidwjid32macg4zt5llqij2h7xayy6e4y3bykhy4ghwei  test.car
+
+########
+#先河接号需要给存储那边的文件0755权限
+chattr  -R -ia   /export/.lotusworker/
+chmod -R  0755   /export/.lotusworker/
+
+
+chattr  -R -ia   /export/lotusminer
+chmod -R  0755  /export/lotusminer
+
+####################
+#lotus裁剪
+[Chainstore]
+  EnableSplitstore = true
+
+  [Chainstore.Splitstore]
+    ColdStoreType = "discard"
+    HotStoreFullGCFrequency = 0
+    HotStoreMaxSpaceTarget = 0
+
+
+############################
+#真实数据
+lotus state miner-info 《miner_id》           #lotus查询miner的信息
+lotus client query-ask  《miner_id》          #lotus向miner询价
+lotus-miner actor set-addrs   "p2p地址"    #发布miner地址
+lotus-miner actor set-peer-id    "peers  id"    #更换peers id
+
+#检索修复boost 碎片
+boostd dagstore  list-shards |grep Errored  |awk '{print "boostd dagstore register-shard " $1}'
+ 
+
+lotus-miner sectors seal   扇区     #手动发布
+lotus-miner sectors list --fast --states   WaitDeals   
+
+#查询消息是否堵住
+lotus mpool pending --local --cids  | wc -l
+
+lotus mpool replace --gas-feecap 350000000 --gas-premium 100395  --gas-limit 434887165 f3ro4arag6qnxmyahusysqnem2mmau47dq7j4cxtadf3yfccuxnhyfepxmqhzqknvq4hhmuekhbv4l2fyzg47a 568
+
+#疏通消息
+lotus mpool pending --local | jq -c '.CID' | awk -F '"' '{print $4}' | xargs -n 1 lotus mpool replace --auto --fee-limit=5
+
+boost provider libp2p-info   《miner_id》
+#设置矿工号询价的价格
+lotus-miner storage-deals  set-ask  --price 0.0000000   --verified-price 0.0000000  --min-piece-size 1GB    --max-piece-size 64GB
+
+#lotus往markets地址转币
+lotus wallet market  add --from  f3tgbpvqo3t53i47gmligo7gavizcjpxttontlbhvfifwkblwpzegdfci4daeqhwk7wmjcec6thoudntathzjq  --address f01943316  99
+
+节点配置多个contorl地址
+lotus-miner actor control set  --really-do-it=true f01234  f03456
+############提币，转币操作（多签）
+确认操作
+#1个币=10^18    (1个币=19个0)
+lotus chain encode params --encoding=hex <mineraddress>  16   {\"amountRequested\":\"1000000000000000000\"}      
+
+提币
+##lotus msig propose --from=<多签钱包>   <owner地址>   <mineraddress>   0  16   <返回值>
+lotus msig propose --from=f3vhlrj3xy42pnjq54yxj3pq6ix7eo5ddo5qoq3cgdh6gp7bn7fhba7ffjstpkjzndkqxuffvek3swtp4ius4a f01555487  f2bi7ygg3lfoe47l4iacrc2ej2jmu2tp2g26xaasa 0 16 814a002b5e3af16b18800000
+
+转币
+##lotus msig propose --from   <多签钱包>   <owner地址>    <转账地址>     <金额>
+lotus msig propose --from  f3vhlrj3xy42pnjq54yxj3pq6ix7eo5ddo5qoq3cgdh6gp7bn7fhba7ffjstpkjzndkqxuffvek3swtp4ius4a f01555452 f1afokf4px4zps72edqhyfxtrwzf7hzxwmhlnsdba   95
+
+查询是否提案
+lotus msig  inspect   <onwer钱包> 
+
+#模拟窗口抽查
+lotus-miner  proving  compute  windowed-post 5
+
+###########提币，转币
+lotus-miner actor control list --verbose    #查看miner钱包
+lotus-miner actor withdraw   数量              #提币到onwer钱包
+lotus send --from     onwer钱包        转账钱包     数量        #转账
+
+##############miner###########
+查看任务数jobs，并以主机名统计排列
+lotus-miner sealing  jobs|awk 'NR>1{host[$4":"$5]+=1}END{for(i in host)print i,host[i]}'|sort -nk2 |column -t
+
+查看worker数量，并以主机名统计排列
+lotus-miner sealing workers|awk 'NR>1{host[$4":"$5]+=1}END{for(i in host)print i,host[i]}'|sort|column -t
+
+移除miner的（disable和pause）状态的任务
+lotus-miner sealing workers  | egrep  "disable|pause"  | awk -F '[, ]' '{print "lotus-miner worker-remove --uuid",$2}' 
+
+批量删除SealPreCommit1Failed状态或其他状态
+lotus-miner sectors list --fast --states SealPreCommit1Failed |awk 'NR>1{print "lotus-miner sectors remove --really-do-it "$1}' 
+
+批量删除SealPreCommit1Failed状态或其他状态
+lotus-miner sectors list --fast |egrep "(SealPreCommit2Failed|SealPreCommit1Failed|CommitFailed|CommitFinalizeFailed)" | awk 'NR>1{print "lotus-miner sectors remove --really-do-it " $1  " Removed" }'
+
+批量放弃多个任务
+lotus-miner sealing jobs |grep  "" | awk '{print "lotus-miner sealing  abort " $1" && lotus-miner sectors remove --really-do-it "$2 }'
+
+清空worker的三个目录
+ansible  f0469055-p1 -m  raw  -a  "rm -rf /opt/raid0/workercache/cache/* && rm -rf /opt/raid0/workercache/sealed/* && rm -rf /opt/raid0/workercache/unsealed/*"
+
+删除disabled或者是pause的worker
+lotus-miner sealing workers  | egrep  "disable|pause"  | awk -F '[, ]' '{print "lotus-miner worker-remove --uuid",$2}'
+
+查看某种错误状态的扇区
+lotus-miner sectors list --states Proving | awk 'NR>1{print $1}' > /tmp/ip1.txt
+for i in `cat /tmp/ip1.txt`;do lotus-miner sectors status --on-chain-info  $i | egrep 'Precommit:|Commit:|InitialPledge:' ;done
+for i in `cat /tmp/ip1.txt`;do lotus-miner storage find  $i | grep -i url |egrep 'mnt|ceph'|sed 's/sealed/\{sealed,cache\}/' |awk '{print "du -sh  "$2}' |bash ;done 
+for i in `cat /tmp/ip1.txt`;do lotus-miner storage find  $i | grep -i url |grep mnt|awk -F'-' '{print $3}' ;done   >  /tmp/ip2.txt 
+for i in `cat /tmp/ip1.txt`;do lotus-miner sectors status --on-chain-info  $i  | egrep 'SectorID:|SealGroupID:' ;done
+for i in `cat /tmp/ip2.txt`;do lotus-miner sectors update-state --really-do-it $i SubmitCommit  ;done
+lotus-miner worker-pause --uuid all  -tt p2 
+lotus-miner worker-pause --uuid all  -tt ap
+批量停止给机器派发任务
+lotus-miner sealing workers   | grep '192.168.107.24'  | awk -F '[, ]' '{print "lotus-miner worker-pause --uuid " $2  " -tt ap " }' 
+
+批量恢复给机器派发任务
+lotus-miner sealing workers   | grep '192.168.107.24'  | awk -F '[, ]' '{print "lotus-miner worker-resume --uuid " $2  " -tt ap " }' 
+
+abort某个节点的p1后removed
+lotus-miner sealing jobs |grep -w 'f01177590-p1-192-168-107-23' | awk '{print "lotus-miner sealing abort " $1" && lotus-miner sectors remove --really-do-it "$2 }'
+lotus-miner update-params-fin --tickets 20  --interval 6
+限制miner的落盘个数，6分钟20个
+lotus-miner update-params-fin --tickets 30 --interval 6
+落盘速度300m（在apx启动脚本配置）
+YOUZHOU_FINALIZE_BANDWIDTH=500m
+
+(commitfaied. finalizedfailed)失败的扇区，不能删除，需要重新落盘扇区
+lotus-miner sectors update-state --really-do-it 扇区编号 Committing
+
+扇区如果是已经上链，需要先清除链上数据再remove扇区
+lotus-miner sectors terminate --really-do-it 扇区编号
+删除已清除链上数据的扇区
+lotus-miner sectors remove --really-do-it 扇区编号
+
+删除p1机器workercheck的三个文件的扇区
+ls   /opt/raid0/workercache/unsealed/ | awk -F '-' '{print $3}'
+for i in `cat /tmp/sectors.txt` ;do lotus-miner sectors status $i | egrep 'SectorID|Status';done
+#for i in `cat /tmp/sectors.txt`; do a=$i && rm -rf /opt/raid0/workercache/cache/*$a*  &&  rm -rf /opt/raid0/workercache/sealed/*$a*  && rm -rf /opt/raid0/workercache/unsealed/*$a* ;done	
+
+for i in `cat /tmp/sectors.txt` ;do lotus-miner sectors status $i | egrep 'SectorID|Status|HasFinalized' | grep -B2 false | awk 'NR==1' | awk '{print $2}';done    ###过滤false状态的扇区
+for i in `cat /tmp/sectors.txt` ;do lotus-miner sectors status $i | egrep 'SectorID|Status' | grep -B1  Remove | awk 'NR==1' | awk '{print $2}';done         ###过滤Remove状态的扇区
+
+#####
+#查询即将到期的扇区，指定高度
+lotus-miner sectors check-expire     --cutoff=2880
+
+扇区续期，现在上链一条消息有限制多少个扇区才行，上不了链的话把扇区减少就可以上链
+（我从2000个扇区正常上链到后面失败，改为1000扇区后又正常上链）
+
+#过滤5个月内的快过期的扇区，并输出前2000个扇区
+lotus-miner sectors check-expire --cutoff 432000 | awk 'NR>1{print $1}' |head -n 2000  > /tmp/sec.txt
+
+#扇区续期  
+#没有--really-do-it只打印续期扇区信息，  --sector-file指定续期扇区文件  ，--new-expiration  当前高度+续期高度，2880*天数 ，--tolerance 0   扇区高度小于续期高度，就不许去，0默认是7天
+lotus-miner sectors renew --really-do-it   --sector-file   /tmp/sec.txt      --new-expiration   2653200    --tolerance 0   
+
+#续期消息会上不了链，Gas Premium和Gas Limit会比较高，需要手动上链（续期命令执行后会返回一个cid）
+lotus mpool replace --gas-feecap 18000000000 --gas-premium 1941036  --gas-limit 3048490216     上个命令的cid
+
+#打印已删除的扇区
+lotus-miner sectors expired --show-removed
+
+#删除过期扇区   <它会帮你筛选所有满⾜条件的扇区并警告你操作不可逆，并返回要继续执⾏应操作什么命令>
+lotus-miner sectors expired --remove-expired         
+
+#消息堵住，指定cid消息手动上链
+lotus mpool pending --local --from   <cid>
+
+#查询消息是否堵住
+lotus mpool pending --local --cids  | wc -l
+
+#获取优质的peers
+lotus net scores|awk -F, '{if ($2 > 1) print $1}'
+
+#连接一个peer
+lotus net connect   /ip4/37.245.8.244/tcp/24007/p2p/12D3KooWK2TjpM9mk6WPL1wV6mGYU1v1gnBi4wYGjCyL1ui1zcX3
+
+#查看指定prees_id
+lotus net findpeer   prees_id
+
+#获取lotus灯塔的连接tonke
+lotus auth api-info --perm admin 
+
+# 消息堵塞检查与疏通
+lotus mpool pending -local | grep Message | wc -l
+
+# 检查扇区的错误扇区
+lotus-miner proving check  --only-bad  11
+
+#查看lotus  p2p的网络质量
+lotus net bandwidth
+
+# 列出等待上链消息
+lotus mpool pending --local
+
+#等待上链，集合上链c2
+lotus-miner sectors batching commit --publish-now=true
+
+#等待上链，集合上链p2
+lotus-miner sectors batching precommit --publish-now=true
+
+# 消息堵塞, 手动上链
+for i in `lotus mpool pending --local --cids`; do lotus mpool replace --gas-feecap 800000000 --gas-premium 2708563 --gas-limit 484902166 $i && sleep 1;done
+
+#删除3个workercheck下的sectors
+a=$i && rm -rf /opt/raid0/workercache/cache/*$a*  && rm -rf /opt/raid0/workercache/sealed/*$a*  && rm -rf /opt/raid0/workercache/unsealed/*$a*    
+
+#查c2落盘时间
+grep 2021-10-05 /opt/worker-3c2/log.txt   | egrep 'api > seal_commit_phase2: start|api > seal_commit_phase2: finish'
+
+#抽奖不上链参数
+YOUZHOU_DISCARD_WINBLOCK = true
+
+#################################################################################
+# 删除软raid0  假设要删除的软raid0为/dev/md0，此raid0由两块盘/dev/vdb、/dev/vdc组成
+#卸挂载
+umount /dev/md0
+#停止运行raid0
+mdadm -S /dev/md0
+#删除配置文件中与此raid0有关内容
+#如果机器上只有/dev/md0一个raid，可直接用：
+#注意：配置文件所在目录可能不同
+cat /dev/null > /etc/mdadm.conf
+停raid0盘
+cat /proc/mdstat
+#删除元数据
+mdadm --zero-superblock /dev/vdb
+mdadm --zero-superblock /dev/vdc
+#实际操作以下内容
+mdadm --zero-superblock /dev/nvme0n1
+mdadm --zero-superblock /dev/nvme1n1
+mdadm --zero-superblock /dev/nvme2n1
+mdadm --zero-superblock /dev/nvme3n1
+mdadm --zero-superblock /dev/nvme4n1
+mdadm --zero-superblock /dev/nvme5n1
+mdadm --zero-superblock /dev/nvme6n1
+mdadm --zero-superblock /dev/nvme7n1
+
+报错的解决方法：
+装apt install -y  nvme-cli 工具
+然后使用nvme format -s  1  /dev/nvmex 
+
+再用mkfs创建文件系统就可以了
+
+#如果/etc/fstab里面有对应的软raid0挂载信息，还要删除对应的信息
+
+#初始化nvme盘
+parted  /dev/nvme0n1  mklabel loop  
+
+组raid0
+mdadm -Cv /dev/md0 -a yes -n 4 -l 0 /dev/nvme0n1   /dev/nvme1n1 /dev/nvme2n1  /dev/nvme3n1 /dev/nvme4n1 /dev/nvme5n1 /dev/nvme6n1 /dev/nvme7n1
+mdadm -D --scan >/etc/mdadm.conf
+mkfs.xfs /dev/md0
+ls -l /dev/disk/by-uuid/|awk '/md0/{print "echo \"/dev/disk/by-uuid/"$9" /opt/raid0 xfs defaults 0 0\" >>/etc/fstab"}'|bash 
+ls -l /dev/disk/by-uuid/|awk '/md127/{print "echo \"/dev/disk/by-uuid/"$9" /opt/raid0 xfs defaults 0 0\" >>/etc/fstab"}'|bash
+mkdir /opt/raid0
+mount -a
+vuin
+098.tip
+# 免交互改rootmima
+echo "root:21ops.comM" |chpasswd
+#ipmi更改密码   
+ipmitool user set password 2 21ops.comM
+
+# 确认挂载正确
+df -h /opt/raid0
+######################################
+
+查看c2机器显卡的gpu的id
+lspci|awk '/VGA.*Corporation/{print strtonum("0x"$1)}'
+
+同构c2需要一个指定大页(大页200就写200，190就写190)
+export mimalloc_reserve_huge_os_pages=200     
+
+nfs  出现掉盘
+strace df -h
+
+####################################################################################
+
+
+3、修改硬盘参数
+cat > /etc/udev/rules.d/71-block-max-sectors.rules <<EOF
+ACTION=="add", SUBSYSTEM=="block", RUN+="/bin/sh -c '/bin/echo 128 > /sys%p/queue/max_sectors_kb'"
+EOF
+4、重启服务器
+5、cat /sys/block/nvme*n1/queue/max_sectors_kb
+
+##################################################################################
+# 只写不读, -runtime N秒 -directory=指定压测的目录
+fio -direct=1 -ioengine=libaio -iodepth=64 -rw=write -bs=4m -size=100G -numjobs=2 -runtime=120 -time_based=1 -group_reporting -directory=/opt/raid0/fio -name=Testing-write --output=/root/Testing-write.log
+
+# 读写一起, -runtime N秒 -directory=指定压测的目录
+fio -direct=1 -ioengine=libaio -iodepth=64 -rw=rw -bs=4m -size=100G -numjobs=2 -runtime=120 -time_based=1 -group_reporting -directory=/opt/raid0/fio -name=Testing-readwrite --output=/root/Testing-readwrite.log
+
+
+iostat -dmx 1 /dev/nvme*
+测试磁盘压力
+
+#################################################################################
+vim /etc/netplan/00-installer-config.yaml
+加一行IP地址
+
+netplan apply   重启网卡
+ip route add 192.168.152.0/24 via 192.168.136.254 加路由
+
+############################################################
+显卡无法安装更新源
+apt-get update
+apt-get upgrade  -y
+
+#############################################################
+导入密钥
+lotus wallet import    [o.key] 密钥文件  
+导出密钥
+lotus wallet export  密钥
+查看密钥
+lotus wallet list
+lotus-miner actor control list --verbose
+查看钱包余额
+lotus wallet balance
+获取链接灯塔的api
+lotus auth api-info --perm admin   获取链接灯塔的api
+################################################################
+七牛云存储worker机器挂载
+
+ansible f01038389-p1  -m copy  -a "src=/root/fcfs.tar.gz  dest=/fcfs.tar.gz"
+下面命令用shell模块
+mkdir  /kodo-fcfs
+mkdir /qny/20p/f01038389 -p
+tar  -xf /fcfs.tar.gz -C /kodo-fcfs/
+cd /kodo-fcfs/kodo-fcfs_tar/ &&  mv * /kodo-fcfs/
+cd  /kodo-fcfs && ./fcfs.sh install2
+systemctl  restart  kodo-fcfs.service && systemctl  enable  kodo-fcfs.service
+df -h | grep 20p
+
+##############################################################
+vim或者crontab模式是nano模式
+
+select-editor   选3
+
+##############################################################
+
+关闭图形化界面
+systemctl set-default multi-user.target      &&     reboot
+##关闭休眠模式
+systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target     &&   systemctl set-default multi-user.target   
+
+
+################################################################
+
+1、内存的插槽总数及已使用的：
+dmidecode |grep -P -A 5 "Memory Device"|grep Size|grep -v 'Range'
+2、支持最大的内存容量：
+dmidecode |grep "Maximum Capacity"
+3、查看内存频率：
+dmidecode |grep "Speed"
+
+
+查看硬盘使用寿命
+nvme  list （apt install nvme-cli -y）
+smartctl -a /dev/nvme0n1  (apt install smartmontools -y)
+
+#################################################################
+zfs服务端
+apt install zfsutils-linux -y 
+# 注意，我们都是36块盘，不要把系统的盘加进去，假如系统盘位sdy
+zpool create tank raidz2 sda sdb sdc sdd sde sdf sdg sdh sdi sdj sdk sdl sdm sdn sdo sdp sdq -f 
+zpool add tank raidz2 sdr sds sdt sdu sdv sdw sdx  sdy sdz sdaa sdab sdac sdad sdae sdaf sdag sdah -f
+zpool add tank spare sdai sdaj -f   #加备盘
+zpool add tank cache -f sda   #有缓存ssd才需要加，否则不需要
+
+#####卸载zfs服务
+#销毁了  zfs文件系统
+zfs destroy  -f  tank
+zfs destroy -r  tank
+
+#######ceph
+#清理ceph
+dmsetup remove_all
+dmsetup status
+
+#销毁
+zpool destroy tank
+
+#ceph的ec配比
+ceph osd erasure-code-profile ls
+
+#查看ceph挂载多少个客户端
+ceph tell mds.* client evict && sleep 10;ceph tell mds.\* client ls|grep 'client\.'
+
+centos
+yum -y install -y http://download.zfsonlinux.org/epel/zfs-release.el7_9.noarch.rpm
+yum -y install kernel-devel zfs
+yum makecache
+###############################################################
+抽查失败，查看显卡和存储加载时间
+--------paux加载 7秒
+2021-10-14T04:06:26.624 INFO filecoin_proofs_api::post > generate_window_post_inner load p_aux files end, took:7.213081446s
+--------merkle tree root（根节点）加载  4分钟
+2021-10-14T04:10:30.881 INFO filecoin_proofs::api::window_post > generate_window_post load merkle tree: end, took:244.257221447s
+--------merkle tree （随机分支）加载  7分钟35秒
+2021-10-14T04:10:30.883 INFO storage_proofs_core::compound_proof > vanilla_proofs:start windowPOST
+2021-10-14T04:18:05.986 INFO storage_proofs_core::compound_proof > vanilla_proofs:finish windowPOST
+--------显卡证明  3分钟11秒
+2021-10-14T04:18:06.908 INFO storage_proofs_core::compound_proof > snark_proof:start windowPOST
+2021-10-14T04:21:17.139 INFO storage_proofs_core::compound_proof > snark_proof:finish: windowPOST
+
+就是抽查过分分为5个阶段 ，  load paux,   load merkle tree root, load merkle tree branches,  gpu snark proof, close all sector files
+
+
+##################################################################
+nload     #查看网卡的流量
+glances   #查看机器的流量
+umount  -fl  /ceph/6p01   /mnt/172.21.8.1     /mnt/172.21.8.2   /mnt/172.21.8.3
+
+lspci | grep -i ethernet    #查看网卡接口型号
+ethtool  enp193s0f0     #查网卡的详细信息
+dhclient                        #查看那个网卡有接网
+netplan   apply            #重启网卡
+###################################################################
+apt remove -y `dpkg -l|awk '/nvidia/{print $2}'`
+rmmod nvidia_uvm
+rmmod nvidia_drm
+rmmod nvidia_modeset
+rmmod nvidia
+apt install nvidia-driver-470 -y
+
+sudo rmmod nvidia_drm
+sudo rmmod -f nvidia_uvm
+sudo rmmod nvidia_modeset
+sudo rmmod -f  nvidia
+nvidia-smi
+apt-mark hold nvidia-driver-470-server
+
+######################################################################
+lotus-miner actor control list --verbose    #查看miner钱包
+lotus msig create --required=2 --from [发起人] [签名人1，签名人2]                //创建多签钱包
+lotus msig inspect    f01753007                                                                          //检查多签钱包
+lotus send --from    owner钱包    多签钱包   0.1                                                 //给多签钱包转0.1个fil                                                        
+lotus-miner actor set-owner --really-do-it <newOwner> <oldOwner>         //更新owner钱包给多签地址
+lotus chain encode params --encoding=hex <minerAddress> 23 \"<newOwnerIdAddress>\"     //执行特有方法得到返回值
+lotus msig propose --from=<newOwnerSigner> <newOwner> <minerAddress> 0 23 <params>        //添加新的签名人
+#######################################################################
+apt install gdb
+
+gdb --pid=11099
+(gdb) gcore
+Saved corefile core.11099
+(gdb) detach
+
+
+第一句的意思是，用linux默认的coredump生成
+
+sysctl -w kernel.core_pattern=core.%u.%p.%t
+ulimit -c unlimited
+
+######################################################################
+免交互式创建tmux
+tmux new-session -d -s gen2                                           ###创建一个名叫gen     tmux窗口，并放到后台
+tmux send-keys -t gen2 'bash /root/rsync.sh' C-m       ###免交互式执行     命令
+tmux kill-session -t gen                                                   ###杀死名叫gen    的tmux窗口
+
+#########################################################################
+## 需要更换的指标
+for i in $(ls /sys/block/|egrep -v '^(dm|md|loop|vd)'|sort -k 1.4);do smartctl -iA /dev/$i |awk 'BEGIN{IGNORECASE=1;printf "'$i' "}{if($0~/Serial Number|Device Model/){printf $NF"\t" }else if($1~/^(5|187|188)$/){printf $2": "$NF"\t"}}END{print}'; done
+
+## 影响性能的指标
+for i in $(ls /sys/block/|egrep -v '^(dm|md|loop|vd)'|sort -k 1.4);do smartctl -iA /dev/$i |awk 'BEGIN{IGNORECASE=1;printf "'$i' "}{if($0~/Serial Number|Device Model/){printf $NF"\t" }else if($1~/^(1|7|183|189|197|200)$/){printf $2": "$NF"\t"}}END{print}'; done
+
+## 磁盘寿命
+for i in $(ls /sys/block/|egrep -v '^(dm|md|loop|vd)'|sort -k 1.4);do smartctl -iA /dev/$i |awk 'BEGIN{IGNORECASE=1;printf "'$i' "}{if($0~/Serial Number|Device Model/){printf $NF"\t" }else if($1~/^(3|9|12|174|192|177)$/){printf $2": "$NF"\t"}else if($1~/(241|242)/){printf $2": "($NF*512)*1.0e-12"TB\t"}}END{print}'; done
+
+#7371调8个numa
+7371  Die  2numa    channel  8numa   socket  1numa
+
+apt autoremove
+apt-get dist-upgrade
+apt install ipmitool  -y 
+ipmitool  lan print 1
+ipmitool -I open lan set 1 ipsrc static
+ipmitool -I open lan set 1 ipaddr 172.24.2.28                       
+ipmitool -I open lan set 1 netmask 255.255.255.0
+ipmitool -I open lan set 1 defgw ipaddr 172.24.2.254
+ipmitool  lan print 1
+
+# 在ID为6的channel 添加用户root  密码21ops.com 启用并给予管理员权限
+ipmitool user set name 6 root 
+ipmitool user set password 6 21ops.comM
+ipmitool channel setaccess 1 6 callin=on ipmi=on link=on privilege=4
+ipmitool user enable 6
+ipmitool user list  1
+
+##########mergerfs搭建
+mergerfs -o noforget,allow_other,use_ino,nonempty,category.create=redis,minfreespace=65G,combinedirs=/cache/:/sealed/,redis=tcp://127.0.0.1,threads=40,security_capability=false,cache.attr=10000,cache.entry=1000,cache.negative_entry=1000,cache.readdir=true /mnt/data1:/mnt/data10:/mnt/data11:/mnt/data12:/mnt/data13:/mnt/data14:/mnt/data15:/mnt/data16:/mnt/data17:/mnt/data18:/mnt/data19:/mnt/data2:/mnt/data20:/mnt/data21:/mnt/data22:/mnt/data23:/mnt/data24:/mnt/data25:/mnt/data26:/mnt/data27:/mnt/data28:/mnt/data29:/mnt/data3:/mnt/data30:/mnt/data31:/mnt/data32:/mnt/data33:/mnt/data34:/mnt/data35:/mnt/data36:/mnt/data4:/mnt/data5:/mnt/data6:/mnt/data7:/mnt/data8:/mnt/data9: /export -f  > /root/mergerfs.log 2>&1 &
+
+mergerfs -o noforget,allow_other,use_ino,nonempty,minfreespace=65G,category.create=rand /mnt/disk1:/mnt/disk10:/mnt/disk11:/mnt/disk12:/mnt/disk13:/mnt/disk14:/mnt/disk15:/mnt/disk16:/mnt/disk17:/mnt/disk18:/mnt/disk19:/mnt/disk2:/mnt/disk20:/mnt/disk21:/mnt/disk22:/mnt/disk23:/mnt/disk24:/mnt/disk25:/mnt/disk26:/mnt/disk27:/mnt/disk28:/mnt/disk29:/mnt/disk3:/mnt/disk30:/mnt/disk31:/mnt/disk32:/mnt/disk33:/mnt/disk34:/mnt/disk35:/mnt/disk36:/mnt/disk4:/mnt/disk5:/mnt/disk6:/mnt/disk7:/mnt/disk8:/mnt/disk9: /export -f
+
+df -h | egrep  "/mnt/disk|/mnt/data|15T" |awk '{printf $NF":"}' |awk '{print "mergerfs -o noforget,allow_other,use_ino,nonempty,category.create=redis,minfreespace=65G,combinedirs=/cache/:/sealed/,redis=tcp://127.0.0.1,threads=40,security_capability=false,cache.attr=10000,cache.entry=1000,cache.negative_entry=1000,cache.readdir=true   "$1 "  /export"}'|bash
+
+df -h | grep 15T |awk '{printf $NF":"}' |awk '{print "mergerfs -o noforget,allow_other,use_ino,nonempty,category.create=redis,minfreespace=65G,combinedirs=/.lotusworker/cache/:/.lotusworker/sealed/,redis=tcp://127.0.0.1,threads=40,security_capability=false,cache.attr=10000,cache.entry=1000,cache.negative_entry=1000,cache.readdir=true   "$1 "  /export"}'|bash
+
+df -h | grep 15T |awk '{printf $NF":"}' |awk '{print "mergerfs -o noforget,allow_other,use_ino,nonempty,minfreespace=65G,category.create=rand  "$1 "  /export"}'
+
+#解散ceph
+umount /var/lib/ceph/osd/ceph-*;apt remove -y $(dpkg -l|awk '/16.2.7/{print $2}');vgs |awk '/ceph/{print "vgremove -f "$1}'|bash
+#格式化文件系统
+lsblk |grep -w 14.6T |awk '{print "mkfs.xfs -f /dev/"$1}'
+#创建目录
+mkdir -p /mnt/disk{1..36}
+
+lsblk -l |grep '14.6T' |awk '{printf $1"|"}'
+
+lsblk |grep -w 14.6T |awk '{print   $1}'
+lsblk |grep -w 14.6T |awk '{print   $1}' | wc -l
+mkdir -p /mnt/disk{1..36}
+lsblk | grep 14.6T |awk '{printf $1 "|"}' |awk '{print $i}' |sed  's/|$//g'
+
+ll /dev/disk/by-uuid/ |grep -E '' | awk '{print $9"  " $11}' |awk -F'../../'  'BEGIN{s=0}{s++; a[s]=$1 }END{ for(j in a) print "echo \"/dev/disk/by-uuid/"a[j], "/mnt/disk"j, "xfs noatime 0 0\" >>  /etc/fstab " }'  
+
+mkdir -p /mnt/disk{1..24}
+
+echo "/export *(rw,async,no_root_squash,no_subtree_check,fsid=-1)"  >> /etc/exports 
+mkdir /export
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC9WBeZqnT1GPVX34FcPD1Weh05YFRGneMMJOSCXxx4QD4iGKWNhekVnyz+TqqavtM24Cmn4QxANCJwGuTOSE1ezP/cX0IK0xjyIMaXYunKYb+xIV8bohb2mxM6pBet7CtRXzDL6f6vreHry5BOsVxkL47nXx4zGlD4A0UkriRgp4rLxf99VpLrgcltThGo+obIu9gutB7vw7Ea6UId66EnWv7qVU/FZPLw6ypzX9qtvFHG7+nHHMzHpudrMHwMMFxH7AZGKkrNnrHZ5UyYCBm65emF7i0tKmUX1aInN5i5vjdjSCxTKFjA+0TwU85/MiKBVTVh3j8pCyp3Kenfw//8iJY1MKk+oS88+PZ3F6Z9PBqdBxE8akpYpcGknQsRJLVD9xnXy6aL3pYmO1/L6pq1a2kkWgS4PuLolazK9/J6N2vIfm5s8SMiEnR9DuY4LP3NY+UkjYPWr9VU90AyJUwnIFuVUKD2jXt6UKqaewnSfI5nngGvWvK78FJm8pPDFxM= root@chimsen"   >>  /root/.ssh/authorized_keys
+
+systemctl restart redis
+df -h | egrep  "/mnt/disk|/mnt/data|15T" |awk '{printf $NF":"}' |awk '{print "mergerfs -o noforget,allow_other,use_ino,nonempty,category.create=redis,minfreespace=65G,combinedirs=/cache/:/sealed/,redis=tcp://127.0.0.1,threads=40,security_capability=false,cache.attr=10000,cache.entry=1000,cache.negative_entry=1000,cache.readdir=true   "$1 "  /export"}'|bash
+systemctl restart  nfs-server
+#################奇点切割工具
+#删除单个数据集   删除数据集和car文件  --purge
+singularity prep remove  -h
+
+#列表交易准备请求
+singularity prep list
+
+#检查交易准备请求状态
+singularity prep status -h
+
+#检查特定的交易生成请求状态
+singularity prep generation-status -h
+
+#查询一个数据集的单个car文件
+singularity prep generation-status --json --dataset <dataset> <index>
+
+
+###数据变大
+#yuv转avi
+ffmpeg  -s 1920*1080 -pix_fmt yuv420p -i "/root/data01/1660219023357452.yuv" -vcodec bmp  /root/data-end/aaa.avi
+
+#MP4转yuv
+ffmpeg -i "/root/data01/1660219023357452.mp4" -s 3840x2048 -pix_fmt yuv420p "/root/data01/1660219023357452.yuv"
+
+
+
+
+ubuntu18更换阿里源
+cd /etc/apt
+cp sources.list sources.list.bak
+
+vim  sources.list
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+
+机器impi权限
+1、miner、lotus、存储机器做好限制，只允许通过172.24.100.90和172.24.2.248通过私钥登录。所有权限全部改为GZJgQ4SdDm~2uMty~FiQ94K
+2、以后所有的机器都尽量通过IPMI去处理，如果实在要机房处理就需要改个临时密码，处理完成再改回来。
+IPMI权限都是：xingqi     21ops.comM
+
+1、miner、lotus、存储机器做好限制，只允许通过172.24.100.90和172.24.2.248通过私钥登录。所有权限全部改为ckIAnri0wm%Q0nBbMnfV4!
+2、以后所有的机器都尽量通过IPMI去处理，如果实在要机房处理就需要改个临时密码，处理完成再改回来。
+IPMI权限都是：xingqi     21ops.comM
+
+
+#ubuntu2004更换源
+deb http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
+#添加清华源
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse multiverse
+
+#######################批量推送公匙
+
+先安装expect：yum  -y install expect
+
+[root@localhost wang]# vim sshCopyId.sh
+#!/bin/bash
+for i in 192.168.100.{172..176} #定义i变量，逐个查看
+do
+password=”jianchi”
+/usr/bin/expect -c ”
+spawn ssh-copy-id -i /root/.ssh/id_rsa.pub root@$i
+expect {
+\”*(yes/no)\” { send \”yes\r\”;exp_continue }
+\”*password\” { send \”$password\r\”; exp_continue }
+}
+expect eof”
+done
+
+
+#############################python脚本造数据+切car
+python3.9 data-gen-v2.py --config ./config.toml -o /mnt/md0/data-car --temp ./shm --boostx-binary ./boostx
+
+#切car后需要取car的数据
+for i in `seq 1 850`;do  grep -wA8  "\"index\": $i"  /mnt/10.3.13.172/export/python3/config.toml  |egrep 'filename|commpCid|carSize|payloadCid' |awk -F: '{print $2}' |awk -F, '{printf $1 }' | awk '{print $i}'  ;done  > /mnt/10.3.13.172/export/data02/172-car.txt
+
+#切car后需要给carfile改名
+awk '{print "mv /mnt/10.3.13.172/export/data02/"$1".car   /mnt/10.3.13.172/export/data02/"$3".car"}'  /mnt/10.3.13.172/export/data02/172-car.txt
+
+########sed，文件中数据是由一个或者制表位（多个空格）分隔开的，将 这些空格替换为特定字符。
+#解决方法：
+sed -e 's/[ ][ ]*/,/g' filename
+sed -e 's/[[:space:]][[:space:]]*/ /g' filename
+这样将空格或者制表位替换为“逗号”了。
+
+#换行符替换为
+sed ':a;N;$!ba;s/\n/ /g'
+
+
+########ansible 普通用户提权
+172.23.59.58   ansible_user="test" ansible_ssh_pass="huawei@123" ansible_become_pass="huawei@123"
+ ansible test -b --become-user root --become-method sudo -m copy -a "src=/tmp/authorized_keys  dest=/root/.ssh/ mode=755" -i bb
+
+
+###########ubuntu安装python3.9
+1、更新软件包列表并安装必备组件：
+sudo apt update
+sudo apt install  -y software-properties-common
+2、将Deadsnakes PPA添加到ubuntu20.04系统的来源列表中：
+sudo add-apt-repository ppa:deadsnakes/ppa
+出现提示时，按[Enter]继续。
+3、启用存储库后，可以通过执行以下命令安装Python 3.9：
+sudo apt install  -y python3.9
+4、通过键入以下命令验证安装是否成功：
+python3.9 --version
+
+###########端口转发
+chmod +x /etc/rc.d/rc.local
+echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >>/etc/rc.local
+echo 'iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 3128 -j DNAT --to-destination 154.210.12.100:12289' >>/etc/rc.local
+echo 'sysctl -w net.ipv4.ip_forward = 1 ' >>/etc/rc.local
+
+##########################
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 3128 -j DNAT --to-destination 154.210.12.100:12289
+#把访问3128端口  转到154.210.12.100:12289
+
+1.来自于172.16.0.0/16网段的都允许访问我本机的172.16.100.1的SSH服务：
+iptables -t filter -A INPUT -s 172.16.0.0/16 -d 172.16.100.1 -p tcp –dport 22 -j ACCEPT
+
+2.将所有192.168.10.0网段的IP在经过的时候全都转换成172.16.100.1这个假设出来的外网地址：
+iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -j SNAT –to-source 172.16.100.1
+
+3.将状态为ESTABLISHED数据包直接转发：
+iptables -t filter -A FORWARD -m state –state ESTABLISHED -j ACCEPT

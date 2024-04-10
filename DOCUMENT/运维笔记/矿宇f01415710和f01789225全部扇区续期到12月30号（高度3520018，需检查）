@@ -1,0 +1,16 @@
+矿宇f01415710和f01789225全部扇区续期到12月30号（高度3520018，需检查），6月20开始有扇区到期
+
+lotus-miner sectors extend --really-do-it   --sector-file  /root/guozhichao/a00    --new-expiration   3520018    --tolerance 0
+
+
+root@f01789225-miner-10-3-12-53:~/guozhichao# lotus mpool pending --local |grep Method
+
+
+
+lotus mpool pending --local |grep '"/":' |awk '{print $2}' |uniq |awk -F'"' '{print $2}'
+
+
+
+
+
+root@f01789225-miner-10-3-12-53:~/guozhichao# for i in `lotus mpool pending --local |grep '"/":' |awk '{print $2}' |uniq |awk -F'"' '{print $2}'`; do lotus mpool replace --gas-feecap 206274792 --gas-premium 206274792  --gas-limit 4626115831  $i; done
