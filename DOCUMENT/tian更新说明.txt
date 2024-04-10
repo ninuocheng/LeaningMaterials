@@ -23,4 +23,4 @@ cd /data/titan-nft/deploy
 https://test1.titannet.io/ ----->    bash deploy-huygens-dashboard-test1.sh
 https://storage.titannet.io -----> bash deploy-storage.sh
 https://storage1.titannet.io -----> bash deploy-storage1.sh
-先更新官网，在更新storage
+先更新官网，在更新storage。最后记得刷新缓存
