@@ -1,10 +1,10 @@
 #!/bin/bash
 # Set variables
-url="http://172.25.9.91:1081/suspend/phone"
+url="http://172.24.100.81:1081/suspend/phone"
 data='{
-    "metrics_type":3,
-    "machine": "183.178.32.69:222",
-    "address": "f01098835"
+    "metrics_type":5,
+    "machine": "172.25.3.9:22",
+    "address": "f01658888"
 }'
 
 # Send POST request with cURL
