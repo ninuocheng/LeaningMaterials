@@ -7,7 +7,7 @@
 6.git status   #查看状态
 7.git branch #查看当前所在分支
 8.git commit -m "update file" #提交暂存区中的内容到本地仓库，update file是备注
-9.git push #提交代码到远程仓库
+9.git push #推送代码到远程仓库
 
 删除文件的步骤
 1.git rm 文件1 文件2 #可以批量rm掉
@@ -17,4 +17,4 @@
 合并分支到主分支的步骤
 1.git checkout main     #先切换到主分支
 2.git merge test     #然后合并分支到主分支，test是要合并到主分支的分支
-3.git push #最后提交最新合并的分支到远程仓库
+3.git push #最后推送到远程仓库
