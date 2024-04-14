@@ -1,4 +1,8 @@
+vim 文件  #vim编辑更新文件内容或是echo追加重定向文件内容
+git diff 更新的文件  #对比更新的文件和仓库的区别
+git restore 更新的文件 #撤销更新的文件(如果要还原到更新前的文件，又不记得更新过什么内容了，可用此操作恢复)
 git add .      #添加所有文件到暂存区
+git reset HEAD xxx  #撤销标记的文件，xxx是add的文件
 git status   #查看状态
 git branch #查看当前所在分支
 git commit -m "update file" #提交暂存区中的内容到本地仓库，add file是备注
