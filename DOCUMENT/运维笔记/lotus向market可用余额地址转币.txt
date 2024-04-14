@@ -1,3 +1,0 @@
-#lotus向market可用余额地址转币
-lotus wallet market  add --from    转币地址<一般是从worker地址>     --address  miner节点    转币金额
-lotus wallet market  add --from  f3shzqcwjibhpkf4ajx5s4x6qk3k32qtb7cjbxlon2kp5ygdhimjpnmeuiuohcvgywqyqc5lfs6wd5pprjezaq  --address f01530777  50
