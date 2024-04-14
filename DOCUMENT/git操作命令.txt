@@ -10,3 +10,4 @@ git checkout test #切换到test分支
 1.git checkout master     #先切换到主分支
 2.git merge test     #然后合并分支到主分支，test是要合并到主分支的分支
 3.git push #最后提交最新合并的分支到远程仓库
+kklkl
