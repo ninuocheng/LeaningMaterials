@@ -1,0 +1,10 @@
+---
+- hosts: car
+  remote_user: root
+  gather_facts: false
+  tasks:
+  - name: Install Packages
+    yum:
+      name:
+         - nfs-common
+      state: present

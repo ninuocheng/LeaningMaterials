@@ -1,0 +1,210 @@
+master节点要求cpu核心数至少2个，内存至少1700MB
+node节点对cpu,内存没严格要求
+CentOS Linux release 7.9.2009部署k8s高可用集群（主备模式）
+配置静态IP
+[root@localhost ~]# cat /etc/sysconfig/network-scripts/ifcfg-ens33 
+TYPE=Ethernet
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=static
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=ens33
+UUID=69480742-aac0-45a9-800c-d3593acf8dbc
+DEVICE=ens33
+ONBOOT=yes
+IPADDR=10.10.0.99
+GATEWAY=10.10.3.254
+NETMASK=255.255.252.0
+DNS1=223.5.5.5
+重启网络服务生效
+[root@localhost ~]# systemctl restart network
+配置主机名
+[root@localhost ~]# hostnamectl set-hostname master01
+配置基础yum源
+[root@master01 ~]# mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repobak
+[root@master01 ~]# curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+修改hosts文件
+[root@master01 ~]# cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.10.0.99 master01
+10.10.1.99 master02
+10.10.2.99 node01
+10.10.3.99 node02
+ 验证mac地址uuid
+[root@master01 ~]# cat /sys/class/net/ens33/address 
+00:0c:29:68:75:c6
+[root@master01 ~]# cat /sys/class/dmi/id/product_uuid 
+8BE84D56-5172-6AAD-F6A8-A87AA36875C6
+保证各节点mac和uuid唯一
+禁用swap
+[root@master01 ~]# swapoff -a
+[root@master01 ~]# sed -i.bak '/swap/s/^/#/' /etc/fstab
+配置内核参数，将桥接的IPv4流量传递到iptables的链
+内核参数修改
+查看br_netfilter模块：
+[root@master01 ~]# lsmod |grep br_netfilter
+如果系统没有br_netfilter模块则执行下面的新增命令，如有则忽略。
+临时新增br_netfilter模块:
+[root@master01 ~]# modprobe br_netfilter
+永久新增br_netfilter模块：
+[root@master01 ~]# cat > /etc/rc.sysinit << EOF
+#!/bin/bash
+for file in /etc/sysconfig/modules/*.modules ; do
+[ -x $file ] && $file
+done
+EOF
+[root@master01 ~]# cat > /etc/sysconfig/modules/br_netfilter.modules << EOF
+modprobe br_netfilter
+EOF
+[root@master01 ~]# chmod 755 /etc/sysconfig/modules/br_netfilter.modules
+内核参数临时修改
+[root@master01 ~]# sysctl net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-iptables = 1
+[root@master01 ~]# sysctl net.bridge.bridge-nf-call-ip6tables=1
+net.bridge.bridge-nf-call-ip6tables = 1
+内核参数永久修改
+[root@master01 ~]# cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+[root@master01 ~]# sysctl -p /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+设置kubernetes源
+[root@master01 ~]# cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+EOF
+生成密钥
+[root@master01 ~]# ssh-keygen -N "" -b 4096 -t rsa -f /root/.ssh/id_rsa
+上传公钥
+[root@master01 ~]# ssh-copy-id -i /root/.ssh/id_rsa.pub master02
+Docker安装
+安装依赖包
+[root@master01 ~]# yum install -y yum-utils device-mapper-persistent-data lvm2
+设置Docker源
+[root@master01 ~]# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+安装Docker CE
+docker安装版本查看
+[root@master01 ~]# yum list docker-ce --showduplicates | sort -r
+安装docker
+[root@master01 ~]# yum -y install docker-ce.x86_64
+配置加速
+[root@master01 ~]# cat /etc/docker/daemon.json 
+{
+  "registry-mirrors": ["https://v16stybc.mirror.aliyuncs.com"],   #换成自己的阿里云镜像加速器地址
+  "exec-opts": ["native.cgroupdriver=systemd"]   #默认cgroupfs，k8s官方推荐systemd，否则初始化出现Warning
+}
+重启加载服务生效
+[root@master01 ~]# systemctl daemon-reload 
+[root@master01 ~]# systemctl restart docker && systemctl enable docker
+keepalived安装
+[root@master01 ~]# yum -y install keepalived
+master01上keepalived配置
+[root@master01 ~]# cat /etc/keepalived/keepalived.conf
+! Configuration File for keepalived
+
+global_defs {
+    router_id master01
+   }
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface ens33
+    virtual_router_id 50
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        10.10.3.88
+    }
+}
+所有control plane启动keepalived服务并设置开机启动
+[root@master01 ~]# systemctl restart keepalived.service && systemctl enable keepalived.service
+k8s安装
+1. 版本查看
+[root@master01 ~]# yum list kubelet --showduplicates | sort -r
+安装kubelet、kubeadm和kubectl
+[root@master01 ~]# yum -y install kubelet.x86_64 kubeadm.x86_64 kubectl.x86_64
+启动kubelet并设置开机启动
+[root@master01 ~]# systemctl enable kubelet.service && systemctl start kubelet.service
+关闭防火墙
+[root@master01 ~]# systemctl disable firewalld.service && systemctl stop firewalld.service 
+
+control plane节点加入集群
+在拉取pause镜像是，超时了。 这个是CRI containerd 报的错，所以改docker的镜像地址不管用，需要修改/etc/containerd/config.toml文件
+[root@master01 ~]# containerd config default > /etc/containerd/config.toml
+[root@master01 ~]# grep sandbox /etc/containerd/config.toml
+    sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9"
+[root@master01 ~]# grep Systemd /etc/containerd/config.toml
+            SystemdCgroup = true
+[root@master01 ~]# systemctl daemon-reload && systemctl restart containerd
+初始化
+[root@master01 ~]# kubeadm init --apiserver-advertise-address 10.10.3.88 --pod-network-cidr 10.244.0.0/16 --service-cidr 10.245.0.0/16  --kubernetes-version v1.29.3 --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 10.10.3.88:6443 --token o8np7r.krrvdh2dv1iy80gv \
+	--discovery-token-ca-cert-hash sha256:efc8cee2b6de23686adb855ae02f717f73ca6e524a6275a734724da45aaf8c07
+[root@master01 ~]#  kubeadm token create --print-join-command --ttl 0
+kubeadm join 10.10.3.88:6443 --token orsw73.y1oeivlpz3829u6z --discovery-token-ca-cert-hash sha256:efc8cee2b6de23686adb855ae02f717f73ca6e524a6275a734724da45aaf8c07
+[root@master01 ~]# kubeadm token list
+TOKEN                     TTL         EXPIRES                USAGES                   DESCRIPTION                                                EXTRA GROUPS
+o8np7r.krrvdh2dv1iy80gv   23h         2024-03-19T12:46:44Z   authentication,signing   The default bootstrap token generated by 'kubeadm init'.   system:bootstrappers:kubeadm:default-node-token
+orsw73.y1oeivlpz3829u6z   <forever>   <never>   authentication,signing   <none>                                                     system:bootstrappers:kubeadm:default-node-token
+重新初始化集群
+[root@k8s-master3 ~]# kubeadm reset
+[root@k8s-master3 ~]# iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+[root@k8s-master3 ~]# rm -rf /etc/kubernetes/*
+[root@k8s-master3 ~]# rm -rf /root/.kube/
+[root@k8s-master3 ~]# mkdir -p /etc/kubernetes/pki/etcd
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/ca.crt /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/ca.key /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/sa.key /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/sa.pub /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/front-proxy-ca.crt /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/front-proxy-ca.key /etc/kubernetes/pki/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/etcd/ca.crt /etc/kubernetes/pki/etcd/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/pki/etcd/ca.key /etc/kubernetes/pki/etcd/
+[root@k8s-master3 ~]# scp root@k8s-master1:/etc/kubernetes/admin.conf /etc/kubernetes/admin.conf                                                                                                                                                             
+ 
+
+kubeadm reset
+systemctl daemon-reload
+systemctl restart kubelet
+iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+iptables -nL #检查防火墙规则是否清空
+netstat -antlp #检查端口是否全被放开
+
+

@@ -1,0 +1,30 @@
+---
+#- hosts: 4units-c2
+#- hosts: f02236965-c2
+#- hosts: 172.25.11.63
+#- hosts: f02836091-c2
+#- hosts: f0753213-c2
+#- hosts: f02836080-c2
+#- hosts: f01777770-c2
+#- hosts: f01777777-c2
+- hosts: C2
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: "拷贝主机上的文件到目标服务器上"
+       copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: 0644
+       with_items:
+            #- { src: "/root/.guozhichao/playbook/file/f02236965-miner-172-25-3-13-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f02836091-miner-172-25-3-13-profle", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f02836080-miner-172-25-3-24-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f0753213-miner-172-25-5-41-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f01777770-miner-172-25-3-12-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f02229760-miner-172-25-5-43-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f01656666-miner-172-25-5-70-profile", dest: "/opt/profile" }
+            #- { src: "/root/.guozhichao/playbook/file/f01777777-miner-172-25-3-10-profile", dest: "/opt/profile" }
+            - { src: "/root/.guozhichao/playbook/file/f01699999-miner-172-25-5-61-profile", dest: "/opt/profile" }

@@ -1,0 +1,10 @@
+---
+- hosts: car
+  remote_user: root
+  gather_facts: false
+  tasks:
+  - name: Remove Packages
+    yum:
+      name:
+         - nfs-common
+      state: absent

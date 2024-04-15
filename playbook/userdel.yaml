@@ -1,0 +1,12 @@
+---
+- name: remove users
+  hosts: 172.25.9.71
+  tasks:
+          - name: remove users
+            user:
+                    name: "{{ item }}"
+                    password: "{{ 'ops' |password_hash('sha512') }}"
+                    state: absent
+                    remove: yes
+            loop:
+                    - ops

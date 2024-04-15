@@ -1,0 +1,16 @@
+---
+#- hosts: ServerList
+#- hosts: DWJF-In
+#- hosts: DWJF-Out
+- hosts: iplist
+#- hosts: all
+  remote_user: root
+  gather_facts: false
+  tasks:
+  - name: add key
+    authorized_key:
+      user: root
+      state: absent
+      #key: "{{ lookup('file', '/root/.ssh/old-keys/id_rsa.pub') }}"
+      #key: "{{ lookup('file', '/root/.ssh/bak/id_rsa.pub') }}"
+      key: "{{ lookup('file', '/root/.guozhichao/MachineList/delkey2') }}"

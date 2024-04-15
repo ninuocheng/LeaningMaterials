@@ -1,0 +1,16 @@
+#!/bin/bash      
+CPUModel=$(lscpu |egrep  -w 'Intel|AMD' |awk '{if($0~"Intel"){print $(NF-6)} else if($3 == "AMD"){print $3}else{print ""}}' |awk -F'(' '/Intel|AMD/{print $1}')
+SystemInfo="/tmp/systeminfo"
+lsb_release -a &> $SystemInfo
+SystemName=$(awk '/Distributor/{print $NF}' $SystemInfo)
+VersionID=$(awk '/Release/{print $NF}' $SystemInfo)
+for i in `ls -1 $(which lotus-miner) /opt/raid0/lotusminer-*/lotusminer/bin/lotus-miner 2>/dev/null`
+do
+    LatestMinerBinFile=$i
+    [ ! -f "$LatestMinerBinFile" ] && echo "${LatestMinerBinFile}不存在，请检查。" && continue
+    if $LatestMinerBinFile -v 2>/dev/null|grep -wi "${CPUModel}.${SystemName}.${VersionID}" ;then
+         continue
+    else
+         echo "`${LatestMinerBinFile} -v`和系统版本${SystemName}.${VersionID}或是CPU型号${CPUModel}不匹配，请检查确认"
+    fi
+done
