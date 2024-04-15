@@ -18,3 +18,37 @@
 1.git checkout main     #先切换到主分支
 2.git merge test     #然后合并分支到主分支，test是要合并到主分支的分支
 3.git push #最后推送到远程仓库
+
+修改分支名称的步骤
+1.git chechout -b xxx  #新建的同时切换到该分支
+2.git branch #查看本地分支
+3.git branch -r #查看远程分支
+4.git branch -a #查看本地和远程分支
+5.git branch -m xxx aaa #修改本地分支xxx为aaa
+6.git push -u origin aaa #推送修改的分支aaa到远程仓库,并将上游分支设置为aaa
+7.git push origin -d xxx #删除远程的分支xxx
+8.git branch -d aaa #删除本地的分支aaa
+9.git branch --set-upstream-to origin/aaa #本地分支关联远程分支
+
+版本的回滚
+1.git reflog或是git log #查看历史版本
+2.git reset --hard 版本号 #版本的回归
+
+创建分支
+1.git branch 分支名  #相当于对主线分支的复制
+
+合并分支
+git merge 需要合并的分支名  #把指定的分支合并到当前分支上
+
+创建git的新仓库test
+git init #初始化本地仓库
+touch README.md #创建文件
+git add README.md #添加到暂存区
+git commit -m "first commit" #提交到本地仓库
+git branch -M main #修改当前分支为main
+git remote add origin https://github.com/Gzhichao/test.git #添加远程仓库
+git push -u origin main #关联远程仓库
+存在的仓库test1
+git remote add origin https://github.com/Gzhichao/test1.git
+git branch -M main
+git push -u origin main
