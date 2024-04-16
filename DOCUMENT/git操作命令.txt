@@ -37,7 +37,7 @@ git push origin dev   #推送dev本地分支的所有提交到远程仓库别名
 2.git reset --hard 版本号 #版本的回归
 
 创建分支
-1.git branch 分支名  #相当于对主线分支的复制
+1.git branch 分支名  #相当于对当前分支的复制
 
 合并分支
 git merge 需要合并的分支名  #把指定的分支合并到当前分支上
