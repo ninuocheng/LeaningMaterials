@@ -52,3 +52,34 @@ git push -u origin main #关联远程仓库
 git remote add origin https://github.com/Gzhichao/test1.git
 git branch -M main
 git push -u origin main
+
+修改远程库
+1.git remote -v #查看远程仓库信息
+2.git remote remove origin #删除关联的origin
+3.git remote add origin https://github.com/Gzhichao/LearningMaterials.git（新的远程库) #添加新的远程仓库，origin是远程仓库别名，https://github.com/Gzhichao/LearningMaterials.git是远程仓库地址
+4.git branch #查看当前分支
+5.git push -u origin 当前分支名称 #推送新的分支到远程仓库关联，origin是远程仓库别名
+或是
+1.git remote -v #查看远程仓库信息
+2.git remote set-url origin https://github.com/Gzhichao/LearningMaterials.git (新的远程库) #设置新的远程库
+3.git branch #查看当前分支
+4.git push -u origin 当前分支名称  #推送新的分支到远程仓库关联
+设置push.default的值
+git config --global push.default simple   #matching模式会推送所有本地分支到远程仓库，simple或nothing模式只推送当前分支
+git config --list  查看git设置的config
+
+添加token远程仓库链接，方便每次推送需要输入token
+git remote set-url origin https://<your_token>@github.com/Gzhichao/LearningMaterials.git #<your_token>换成token,Gzhichao是github的用户名,LearningMaterials是仓库名称
+
+远程分支操作
+git push -u origin 分支名:分支名  #origin是远程仓库别名
+
+远程仓库非空，本地库也有内容，如何同步本地库和远程仓库
+方法一：
+1.先clone远程仓库到本地
+2.然后更新本地的代码
+3.最后push推送到远程仓库
+方法二:
+git pull --allow-unrelated-histories 远程仓库别名  远程仓库分支
+git add .
+git push -u 远程仓库别名   分支名
