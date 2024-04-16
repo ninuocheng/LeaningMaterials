@@ -18,3 +18,68 @@
 1.git checkout main     #先切换到主分支
 2.git merge test     #然后合并分支到主分支，test是要合并到主分支的分支
 3.git push #最后推送到远程仓库
+
+修改分支名称的步骤
+1.git chechout -b xxx  #新建的同时切换到该分支
+2.git branch #查看本地分支
+3.git branch -r #查看远程分支
+4.git branch -a #查看本地和远程分支
+5.git branch -m xxx aaa #修改本地分支xxx为aaa
+6.git push -u origin aaa #推送修改的分支aaa到远程仓库,并将上游分支设置为aaa
+7.git push origin -d xxx #删除远程的分支xxx
+8.git branch -d aaa #删除本地的分支aaa
+9.git branch --set-upstream-to origin/aaa #本地分支关联远程分支
+
+版本的回滚
+1.git reflog或是git log #查看历史版本
+2.git reset --hard 版本号 #版本的回归
+
+创建分支
+1.git branch 分支名  #相当于对主线分支的复制
+
+合并分支
+git merge 需要合并的分支名  #把指定的分支合并到当前分支上
+
+创建git的新仓库test
+git init #初始化本地仓库
+touch README.md #创建文件
+git add README.md #添加到暂存区
+git commit -m "first commit" #提交到本地仓库
+git branch -M main #修改当前分支为main
+git remote add origin https://github.com/Gzhichao/test.git #添加远程仓库
+git push -u origin main #关联远程仓库
+存在的仓库test1
+git remote add origin https://github.com/Gzhichao/test1.git
+git branch -M main
+git push -u origin main
+
+修改远程库
+1.git remote -v #查看远程仓库信息
+2.git remote remove origin #删除关联的origin
+3.git remote add origin https://github.com/Gzhichao/LearningMaterials.git（新的远程库) #添加新的远程仓库，origin是远程仓库别名，https://github.com/Gzhichao/LearningMaterials.git是远程仓库地址
+4.git branch #查看当前分支
+5.git push -u origin 当前分支名称 #推送新的分支到远程仓库关联，origin是远程仓库别名
+或是
+1.git remote -v #查看远程仓库信息
+2.git remote set-url origin https://github.com/Gzhichao/LearningMaterials.git (新的远程库) #设置新的远程库
+3.git branch #查看当前分支
+4.git push -u origin 当前分支名称  #推送新的分支到远程仓库关联
+设置push.default的值
+git config --global push.default simple   #matching模式会推送所有本地分支到远程仓库，simple或nothing模式只推送当前分支
+git config --list  查看git设置的config
+
+添加token远程仓库链接，方便每次推送需要输入token
+git remote set-url origin https://<your_token>@github.com/Gzhichao/LearningMaterials.git #<your_token>换成token,Gzhichao是github的用户名,LearningMaterials是仓库名称
+
+远程分支操作
+git push -u origin 分支名:分支名  #origin是远程仓库别名
+
+远程仓库非空，本地库也有内容，如何同步本地库和远程仓库
+方法一：
+1.先clone远程仓库到本地
+2.然后更新本地的代码
+3.最后push推送到远程仓库
+方法二:
+git pull --allow-unrelated-histories 远程仓库别名  远程仓库分支
+git add .
+git push -u 远程仓库别名   分支名
