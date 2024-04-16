@@ -86,6 +86,60 @@ git pull --allow-unrelated-histories 远程仓库别名  远程仓库分支
 git add .
 git push -u 远程仓库别名   分支名
 
+查看分支
+git branch 或是git branch -vv
+git branch  -r #查看远程仓库
+git remote show origin #查看远程库信息
+
+新建分支
+git branch 分支  #基于当前分支，新建一个副本分支
+git branch 新建分支  源分支  #基于源分支新建副本分支
+git switch -c 分支  #基于当前分支新建一个副本分支，并同时切换到新建的分支上
+git checkout -b 分支 #基于当前分支，新建一个副本分支，并同时切换到新建的分支上 和git switch -c 分支一样
+
+切换分支
+git switch 分支 或是 git checkout 分支
+
+删除本地分支
+git branch -d 分支
+
+删除远程库分支
+git push 远程库名 -d 分支名
+
+修改分支
+git branch -m 原分支 新分支
+
+新建远程分支
+git push 远程库名  本地分支名  #新建的本地分支，一开始是没有远程分支的
+git remote update origin --prune #更新远程库的分支信息（刷新）
+
+查看远程库信息的方法
+git remote -v #查看本地和远程库的关联信息
+git branch -vv #查看分支情况， 包括远程库分支和本地库分支的关联情况。 里面也有远程库的信息
+git remote show origin 
+cat .git/config
+
+关联本地库和远程库的方法：
+git remote add 远程库名 git远程库地址   #远程库一般别名是origin，也可以随意。建议默认用origin
+所以more的命令：git remote add origin git远程库地址
+git地址通常是ssh或是http。常用http
+ssh地址格式：
+git@托管平台:<你的用户名>/<远程项目名>.git  例子：git@github.com:Gzhichao/LearningNoteBook.git（本人自己的github）
+http地址格式：
+https://托管平台/<你的用户名>/<远程项目名>.git 例子：https://github.com/Gzhichao/LearningNoteBook.git
+
+删除远程库
+git remote rm 库名
+
+关联本地库分支和远程库分支的方法
+本地库和远程库分支建立了关联后，两者间的交互动作，例如：pull，push。进行交互时就不用指定各自的地址。即直接 git push， git pull就可以从远程库分支拉去代码到本地分支了，也方便后续的版本控制和回溯。
+git remote show 远程库名 #查看远程库信息
+git checkout -b 本地分支 远程分支 #创建一个本地分支，并和指定的远程分支关联，远程分支必须存在
+git fetch origin #如果关联分支有报错，是因为本地库创建分支时，是基于远程库分支的，所以需要进行网络交互。执行即可，否则跳过
+git branch -u origin/<分支名>  #关联当前本地分支和指定的远程分支
+git branch --set-upstream-to=origin/<分支名> <本地分支名>  #指定本地分支和指定的远程分支关联
+git push -u origin 分支名 #将当前分支的内容推送到远程分支，并建立关联
+
 但是，并不是一定要把本地分支往远程推送，那么，哪些分支需要推送，哪些不需要呢？
 main分支是主分支，因此要时刻与远程同步；
 dev分支是开发分支，团队所有成员都需要在上面工作，所以也需要与远程同步；
