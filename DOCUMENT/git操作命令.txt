@@ -55,20 +55,21 @@ git remote add origin https://github.com/Gzhichao/test1.git
 git branch -M main
 git push -u origin main
 
-修改远程库
+修改远程库的方法1:
 1.git remote -v #查看远程仓库信息
 2.git remote remove origin #删除关联的origin
 3.git remote add origin https://github.com/Gzhichao/LearningMaterials.git（新的远程库) #添加新的远程仓库，origin是远程仓库别名，https://github.com/Gzhichao/LearningMaterials.git是远程仓库地址
 4.git branch #查看当前分支
 5.git push -u origin 当前分支名称 #推送新的分支到远程仓库关联，origin是远程仓库别名
-或是
+
+修改远程库的方法2:
 1.git remote -v #查看远程仓库信息
 2.git remote set-url origin https://github.com/Gzhichao/LearningMaterials.git (新的远程库) #设置新的远程库
 3.git branch #查看当前分支
 4.git push -u origin 当前分支名称  #推送新的分支到远程仓库关联
 设置push.default的值
 git config --global push.default simple   #matching模式会推送所有本地分支到远程仓库，simple或nothing模式只推送当前分支
-git config --list  查看git设置的config
+git config --list  #查看git设置的config
 
 添加token远程仓库链接，方便每次推送需要输入token
 git remote set-url origin https://<your_token>@github.com/Gzhichao/LearningMaterials.git #<your_token>换成token,Gzhichao是github的用户名,LearningMaterials是仓库名称
@@ -146,6 +147,7 @@ dev分支是开发分支，团队所有成员都需要在上面工作，所以�
 bug分支只用于在本地修复bug，就没必要推到远程了，除非老板要看看你每周到底修复了几个bug；
 feature分支是否推到远程，取决于你是否和你的小伙伴合作在上面开发。
 总之，就是在Git中，分支完全可以在本地自己藏着玩，是否推送，视你的心情而定！
+
 抓取分支
 多人协作时，大家都会往main和dev分支上推送各自的修改。
 
@@ -154,6 +156,7 @@ feature分支是否推到远程，取决于你是否和你的小伙伴合作在�
 2.main,dev都有远程仓库，bug,feature目前没有设置远程仓库
 3.bug，feature提交到本地仓库，无需推送
 3.main，dev提交到本地仓库，还需要推送到远程仓库，如果要合并bug，feature本地分支，提交后再推送即可
+
 具体命令如下：
 就主分支main合并bug分支为例：
 1.git checkout bug #先切换到本地的bug分支
