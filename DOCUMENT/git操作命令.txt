@@ -19,7 +19,7 @@ git push origin dev   #推送dev本地分支的所有提交到远程仓库别名
 
 合并分支到主分支的步骤
 1.git checkout main     #先切换到主分支
-2.git merge test     #然后合并分支到主分支，test是要合并到主分支的分支
+2.git merge test     #然后合并本地仓库的分支到主分支，test是要合并到主分支的本地分支名 或是 git merge origin/test     #然后合并远程仓库的分支到主分支，origin/test是要合并到主分支的远程仓库的分支
 3.git push #最后推送到远程仓库
 
 修改分支名称的步骤
@@ -27,7 +27,7 @@ git push origin dev   #推送dev本地分支的所有提交到远程仓库别名
 2.git branch #查看本地分支
 3.git branch -r #查看远程分支
 4.git branch -a #查看本地和远程分支
-5.git branch -m xxx aaa #修改本地分支xxx为aaa
+5.git branch -m xxx aaa #修改本地分支xxx为aaa  或是 git branch -m aaa(修改本地仓库的当前分支重名为aaa)
 6.git push -u origin aaa #推送修改的分支aaa到远程仓库,并将上游分支设置为aaa
 7.git push origin -d xxx #删除远程的分支xxx
 8.git branch -d aaa #删除本地的分支aaa
