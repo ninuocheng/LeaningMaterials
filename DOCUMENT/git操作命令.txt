@@ -7,7 +7,10 @@
 6.git status   #查看状态
 7.git branch #查看当前所在分支
 8.git commit -m "update file" #提交暂存区中的内容到本地仓库，update file是备注
-9.git push #推送代码到远程仓库
+9.git push origin 分支名#推送代码到远程仓库，origin是远程仓库别名，推送分支，就是把该分支上的所有本地提交推送到远程库。推送时，要指定本地分支，这样，Git就会把该分支推送到远程库对应的远程分支上
+例子：
+git push origin main  #推送main本地分支的所有提交到远程仓库别名origin对应的远程分支上
+git push origin dev   #推送dev本地分支的所有提交到远程仓库别名origin对应的远程分支上
 
 删除文件的步骤
 1.git rm 文件1 文件2 #可以批量rm掉
@@ -28,8 +31,7 @@
 6.git push -u origin aaa #推送修改的分支aaa到远程仓库,并将上游分支设置为aaa
 7.git push origin -d xxx #删除远程的分支xxx
 8.git branch -d aaa #删除本地的分支aaa
-9.git branch --set-upstream-to origin/aaa #本地分支关联远程分支
-
+9.git push --set-upstream origin aaa #本地分支关联远程分支
 版本的回滚
 1.git reflog或是git log #查看历史版本
 2.git reset --hard 版本号 #版本的回归
@@ -83,3 +85,11 @@ git push -u origin 分支名:分支名  #origin是远程仓库别名
 git pull --allow-unrelated-histories 远程仓库别名  远程仓库分支
 git add .
 git push -u 远程仓库别名   分支名
+
+小结
+      1、查看远程库信息，使用 git remote -v;
+      2、本地新建的分支如果不推送到远程，对其他人是不可见的;
+      3、在本地创建和远程分支对应的分支， 使用git checkout -b branch-name,本地和远程分支的名称最好一样
+      4、建立本地分支和远程分支的关联，使用git branch –set-upstream-to=origin/dev dev
+      5、从本地推送分支，使用git push origin branch-name，如果推送失败，用git  pull抓取远程的新提交
+      6、从远程抓取分支，使用git pull，如果有冲突，要先处理冲突
