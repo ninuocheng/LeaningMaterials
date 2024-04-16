@@ -95,6 +95,21 @@ feature分支是否推到远程，取决于你是否和你的小伙伴合作在�
 抓取分支
 多人协作时，大家都会往main和dev分支上推送各自的修改。
 
+本人就自己的https://github.com/Gzhichao/LearningMaterials.git的简介:
+1.目前有四个分支，main是默认的主分支，dev是开发分支，bug是本地修复bug分支，feature是开发单个功能或解决某个问题的分支
+2.main,dev都有远程仓库，bug,feature目前没有设置远程仓库
+3.bug，feature提交到本地仓库，无需推送
+3.main，dev提交到本地仓库，还需要推送到远程仓库，如果要合并bug，feature本地分支，提交后再推送即可
+具体命令如下：
+就主分支main合并bug分支为例：
+1.git checkout bug #先切换到本地的bug分支
+2.git add .  #提交更新到暂存区
+3.git commit -m "update fix bug" #提交到分支的本地仓库
+4.git checkout main #切换到主分支main
+5.git pull origin main #合并前建议拉取最新的代码，避免冲突
+6.git merge bug #合并bug分支到当前主分支main
+7.git push origin main #推送最新的到远程仓库别名origin的主分支main
+
 小结
       1、查看远程库信息，使用 git remote -v;
       2、本地新建的分支如果不推送到远程，对其他人是不可见的;
