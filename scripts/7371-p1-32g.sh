@@ -1,12 +1,10 @@
 #!/bin/bash
 numanum=8
-
 ######################################环境#####################################
 # 硬盘调优
 cat > /etc/udev/rules.d/71-block-max-sectors.rules <<EOF
 ACTION=="add", SUBSYSTEM=="block", RUN+="/bin/sh -c '/bin/echo 128 > /sys%p/queue/max_sectors_kb'"
 EOF
-
 # CPU开启性能模式
 sudo apt-get install cpufrequtils -y
 sudo cpufreq-set -g performance
