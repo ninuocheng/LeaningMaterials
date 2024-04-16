@@ -1,3 +1,25 @@
+设置项目级用户：
+进入项目根目录执行以下命令git config 配置命令
+git config user.name "Gzhichao"
+git config user.email "zhichaoguo75@gmail.com"
+二、开启将凭据缓存在系统中
+1.配置密码缓存
+git config credential.helper cache  #设置账号密码缓存在内存中，缓存时间为15分钟
+
+2.配置密码存储
+执行git config 命令配置
+git config credential.helper "store --file=/root/.guozhichao/LearningMaterials/git/Gzhichao"  #设置账号密码缓存在本地文件中
+vim .git/config
+[credential]
+        helper = store --file=/root/.guozhichao/LearningMaterials/git/Gzhichao  #--file指定密码存储的文件，如果不指定，默认存储在当前用户的家目录下的.git-credentials
+执行成功后可以使用以下命令来检查是否设置成功
+cat .git/config 或是 git config --list | grep credential
+
+三、拉取或推送一次缓存凭据
+        通过以上设置后使用以下任一命令，输入用户名和密码一次后会自动保存。下次再使用就不需要输入用户和密码了
+git pull origin master
+git push origin master
+
 更新文件内容的步骤
 1.vim 文件  #vim编辑更新文件内容或是echo追加重定向文件内容
 2.git diff 更新的文件  #对比更新的文件和仓库的区别
