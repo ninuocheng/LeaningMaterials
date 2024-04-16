@@ -1,0 +1,10 @@
+---
+- hosts: 172.25.10.17
+  sudo: yes
+  remote_user: xxxx
+  gather_facts: false
+  tasks:
+  - name: change user passwd
+    user: name={{ item.user }} password={{ item.password | password_hash('sha512') }}  update_password=always
+    with_items:
+          - { user: 'root', password: '21ops.com@#M' }

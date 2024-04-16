@@ -1,0 +1,16 @@
+---
+- hosts: 2023-10-27-ServerList
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: "拷贝主机上的文件到目标服务器上"
+       copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: 0755
+       with_items:
+            - { src: "/root/.guozhichao/playbook/file/lotus", dest: "/opt/raid0/lotus/bin/lotus" }
+            - { src: "/root/.guozhichao/playbook/file/lotus-miner", dest: "/opt/raid0/lotus/bin/lotus-miner" }
+            - { src: "/root/.guozhichao/playbook/file/lotus-worker", dest: "/opt/raid0/lotus/bin/lotus-worker" }
