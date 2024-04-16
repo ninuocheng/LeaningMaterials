@@ -1,0 +1,28 @@
+1.部署tian官网 进入5.68 执行
+bash /data/titan-nft/deploy/deploy-titan-web.sh 
+最后输出 镜像名字  registry.cn-hongkong.aliyuncs.com/nft/titan-web:2024-04-03_14_27_42
+
+2登录tian容器平台 点击 Deployments 
+网址：https://container-web.container1.titannet.io/
+用户：本地电脑查看
+密码：本地电脑查看
+
+
+3.更新镜像地址
+找到 第二行name 为titan-web 点击进去 点击MANIFEST 更新image的列  更新完成点击 update
+
+
+4.清理cdn缓存
+登录亚马逊 网站：https://us-east-1.console.aws.amazon.com/cloudfront/v4/home?region=ap-south-1#/distributions  用户：本地电脑查看 密码：本地电脑查看
+找到CloudFront 分配  看备用域名列 进去titannet.io 和 www.titannet.io 点击失效  创建失效  添加对象路径 /*
+
+更新所对应的脚本
+cd /data/titan-nft/deploy
+官网：name: titan-web    https://www.titannet.io/ ----->    bash deploy-titan-web.sh
+name:  huygens-dashboard-test1  https://test1.titannet.io/ ----->    bash deploy-huygens-dashboard-test1.sh
+name:  titan-storage https://storage.titannet.io -----> bash deploy-storage.sh
+name:  titan-storage1 https://storage1.titannet.io -----> bash deploy-storage1.sh
+先更新官网，在更新storage。最后记得刷新缓存
+
+刷新缓存
+官网：www.titannet.io和titannet.io都要刷新

@@ -1,0 +1,154 @@
+幸运f01530777节点相关说明：
+miner节点服务器启动的相关程序
+root@f01530777-miner-10-2-6-184:~# pgrep -a lotus
+262600 lotus daemon                                                                    本地启动的lotus程序    
+267533 /opt/raid0/lotusminer-window/lotusminer/bin/lotus-miner run --miner-api 2347    抽查程序
+1119769 /opt/raid0/lotusminer-winning/lotusminer/bin/lotus-miner run --miner-api 2346  爆块程序
+1172732 /opt/raid0/lotusminer-sealing/lotusminer/bin/lotus-miner run                   封装程序
+
+查看GPU
+root@f01530777-miner-10-2-6-184:~# nvidia-smi -L
+GPU 0: NVIDIA GeForce RTX 3080 (UUID: GPU-61efb868-f725-6660-6302-3356e3a37341)
+GPU 1: NVIDIA GeForce RTX 3080 (UUID: GPU-bddeae1f-ea72-9ac5-e2f0-a61b3ac1dfa0)
+
+抽查程序启动的环境变量
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-window/profile 
+export YOUZHOU_SEALING_DISABLE=true             #true禁用封装
+export YOUZHOU_WINDOW_POST_DISABLE=false        #false启用抽查
+export YOUZHOU_WINNING_POST_DISABLE=true        #true禁用爆块
+export LOTUS_MINER_PATH=/opt/raid0/lotusminer-window/lotusminer #指定程序启动的目录
+export FIL_PROOFS_WINDOW_POST_GPU="61efb868-f725-6660-6302-3356e3a37341"  #指定GPU
+export BELLMAN_SYNTHESIZE_BATCH=2
+export BELLMAN_CALC_BATCH=2
+export FIL_PROOFS_LOG_GEN_CACHED_PROOF=true
+export FIL_PROOFS_LOG_GEN_CACHED_PROOF_THRESHOLD=1000
+export RAYON_NUM_THREADS=512
+export LOTUS_BACKUP_BASE_PATH=/opt/raid0/minerbackup  #元数据备份目录
+export FULLNODE_API_INFO=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.cC3UD2t_vyYIQ4fs_7S3C6KfQXpdYtsrfYIaqUWofz4:/ip4/10.3.6.161/tcp/1234/http  #lotus的api接口
+
+抽查程序启动脚本
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-window/start_lotusminer.sh 
+#!/bin/bash
+source /opt/raid0/lotusminer-window/profile                                          #启动会加载抽查程序的环境变量
+logbak=${LOTUS_MINER_PATH}/logbak                                                    #备份日志目录
+time=`date +%Y%m%d%H%M%S`                                                            #备份日志的时间
+[ -f ${LOTUS_MINER_PATH}/logs ] && mkdir -p $logbak && mv ${LOTUS_MINER_PATH}/logs $logbak/miner_${time}.log   #备份日志
+nohup /opt/raid0/lotusminer-window/lotusminer/bin/lotus-miner run --miner-api 2347 >/opt/raid0/lotusminer-window/lotusminer/logs 2>&1 &  #启动抽查程序的命令
+
+爆块程序启动的环境变量
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-winning/profile 
+#common
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/bin/:/usr/local/bin/
+export RUST_LOG=info
+export FIL_PROOFS_PARENT_CACHE=/opt/raid0/filecoin-parents/
+export FIL_PROOFS_PARAMETER_CACHE=/opt/raid0/filecoin-proof-parameters/
+export IPFS_GATEWAY="https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+
+#爆块
+export YOUZHOU_SEALING_DISABLE=true                                                    #true禁用封装
+export YOUZHOU_WINDOW_POST_DISABLE=true                                                #true禁用抽查
+export YOUZHOU_WINNING_POST_DISABLE=false                                              #false启用爆块
+export LOTUS_MINER_PATH=/opt/raid0/lotusminer-winning/lotusminer                       #程序启动的目录
+export FIL_PROOFS_WINNING_POST_GPU="bddeae1f-ea72-9ac5-e2f0-a61b3ac1dfa0"              #指定GPU
+export BELLMAN_SYNTHESIZE_BATCH=2
+export BELLMAN_CALC_BATCH=2
+export YOUZHOU_EXTRA_PROPGATION_DEALY=6
+export YOUZHOU_CREATE_BLOCK_DEADLINE=25
+export FULLNODE_API_INFO=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.vhAJHVPd_0tjq6j92_p7OA5fwLn5J0_f9YvWwm4zSGo:/ip4/10.2.6.151/tcp/1234/http                #lotus的api接口
+
+爆块的启动脚本
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-winning/start_lotusminer.sh 
+#!/bin/bash
+source /opt/raid0/lotusminer-winning/profile              #启动要加载的环境变量
+logbak=${LOTUS_MINER_PATH}/logbak                         #日志备份目录
+time=`date +%Y%m%d%H%M%S`                                 #日志备份时间
+[ -f ${LOTUS_MINER_PATH}/logs ] && mkdir -p $logbak && mv ${LOTUS_MINER_PATH}/logs $logbak/miner_${time}.log   #日志备份
+nohup /opt/raid0/lotusminer-winning/lotusminer/bin/lotus-miner run --miner-api 2346 > /opt/raid0/lotusminer-winning/lotusminer/logs 2>&1 &     #启动爆块的命令
+
+封装启动的环境变量
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-sealing/profile 
+#common 
+export PATH=${PATH}:/usr/local/bin/
+export RUST_LOG=info
+export FIL_PROOFS_PARENT_CACHE=/opt/raid0/filecoin-parents/
+export FIL_PROOFS_PARAMETER_CACHE=/opt/raid0/filecoin-proof-parameters/
+export IPFS_GATEWAY="https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+
+export YOUZHOU_SEALING_DISABLE=false                                           #false启动封装
+export YOUZHOU_WINDOW_POST_DISABLE=true                                        #禁用抽查
+export YOUZHOU_WINNING_POST_DISABLE=true                                       #禁用爆块
+export LOTUS_MINER_PATH=/opt/raid0/lotusminer-sealing/lotusminer               #程序启动的目录
+export LOTUS_BACKUP_BASE_PATH=/opt/raid0/minerbackup                           #元数据备份目录
+export SCH_QUERY_WORKER=true
+export FIL_PROOFS_FIN_TICKETS=40
+export FIL_PROOFS_FIN_TICKET_INTERVAL=6
+export FIL_PROOFS_P1_TICKETS=2
+export FIL_PROOFS_P1_TICKET_INTERVAL=4
+#真实数据
+export FIL_PROOFS_USE_MULTICORE_SDR=1
+export LOTUS_MARKETS_PATH=/root/.boost
+#精简日志
+export mimalloc_verbose=0
+export FIL_PROOFS_LOG_VERIFY_SEAL=true
+export LOTUS_SEALING_MAXWAITDEALSSECTORS=3
+export FULLNODE_API_INFO=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.cC3UD2t_vyYIQ4fs_7S3C6KfQXpdYtsrfYIaqUWofz4:/ip4/10.3.6.161/tcp/1234/http       #lotus的api接口
+
+封装的启动脚本
+root@f01530777-miner-10-2-6-184:~# cat /opt/raid0/lotusminer-sealing/start_lotusminer.sh 
+#!/bin/bash
+source /opt/raid0/lotusminer-sealing/profile     #加载的环境变量
+logbak=${LOTUS_MINER_PATH}/logbak                #日志备份目录
+time=`date +%Y%m%d%H%M%S`                        #日志备份时间
+[ -f ${LOTUS_MINER_PATH}/logs ] && mkdir -p $logbak && mv ${LOTUS_MINER_PATH}/logs $logbak/miner_${time}.log
+nohup /opt/raid0/lotusminer-sealing/lotusminer/bin/lotus-miner run > /opt/raid0/lotusminer-sealing/lotusminer/logs 2>&1 &                                           #程序的启动命令
+
+封装和抽查连接的lotus相关说明：
+
+lotus启动程序
+root@f01250983-miner-10-3-6-161:~# pgrep -a lotus
+42514 lotus daemon
+
+lotus启动的环境变量
+root@f01250983-miner-10-3-6-161:~# cat /opt/lotus/profile 
+# common 
+export PATH=${PATH}:/usr/local/bin/
+export RUST_LOG=info
+export FIL_PROOFS_PARENT_CACHE=/opt/raid0/filecoin-parents/
+export FIL_PROOFS_PARAMETER_CACHE=/opt/raid0/filecoin-proof-parameters/
+export IPFS_GATEWAY="https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+# lotus
+export LOTUS_PATH=/opt/lotus/lotus     #程序的启动目录
+export LOTUS_FVM_CONCURRENCY=4
+export LOTUS_SKIP_APPLY_TS_MESSAGE_CALL_WITH_GAS=1
+export YOUZHOU_CANCEL_PLEDGE=true      #封装从miner上扣质押
+
+lotus启动脚本
+root@f01250983-miner-10-3-6-161:~# cat /opt/lotus/start_lotus.sh 
+#!/bin/bash
+source /opt/lotus/profile               #加载的环境变量
+nohup lotus daemon > /opt/lotus/lotus/logs 2>&1 &   #启动程序命令
+
+爆块连接的lotus相关说明：
+启动的程序
+root@f0513878-miner-10-2-6-151:~# pgrep -a lotus
+53921 lotus daemon
+环境变量
+root@f0513878-miner-10-2-6-151:~# cat /opt/raid0/profile 
+# common 
+export PATH=${PATH}:/usr/local/bin/
+export RUST_LOG=info
+export FIL_PROOFS_PARENT_CACHE=/opt/raid0/filecoin-parents/
+export FIL_PROOFS_PARAMETER_CACHE=/opt/raid0/filecoin-proof-parameters/
+export IPFS_GATEWAY="https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+# lotus
+export LOTUS_PATH=/opt/lotus/lotus
+export TMPDIR=/opt/raid0/
+export LOTUS_FVM_CONCURRENCY=16
+export LOTUS_SKIP_APPLY_TS_MESSAGE_CALL_WITH_GAS=1
+
+启动脚本
+root@f0513878-miner-10-2-6-151:~# cat /opt/raid0/start_lotus.sh 
+#!/bin/bash
+source /opt/raid0/profile
+nohup lotus daemon > /opt/raid0/lotus/logs 2>&1 &
+

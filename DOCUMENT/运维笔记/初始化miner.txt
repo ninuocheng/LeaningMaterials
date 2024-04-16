@@ -1,0 +1,35 @@
+新的owner地址
+f3wgfjtoj4fge4qgsdsafplawnqpxst26dwwt3nuirvub7usss6lpjriuq6njnwr7wkulyue5yv534n6x4a7sq
+
+新的worker地址
+f3sl6yi26pe3hac7lmgimxcdpuqiljwoabe6xb5rua4gcuejttsp2jt7yapp4wvaypnxe7evu53n7ymv2o22za
+
+root@nfs-172-25-5-41:/opt/raid0/newminer# lotus send --from f3w7v35wzdnh2l3mijoap6sdcqvwxrqdf66pc2ofhqgxwmqj7yk56b3zaq4zgnewy7m4273l6cr4u6h2upkuga f3wgfjtoj4fge4qgsdsafplawnqpxst26dwwt3nuirvub7usss6lpjriuq6njnwr7wkulyue5yv534n6x4a7sq 0.1
+2023-06-22T19:37:20.427+0800    INFO    fil-consensus   filcns/upgrades.go:81   migration worker count: 32
+bafy2bzacedo5ispn54nly4qsw65qhf5y66nrelpzsrllvstcoknokmrtvtm4u
+
+root@nfs-172-25-5-41:/opt/raid0/newminer# owner=f3wgfjtoj4fge4qgsdsafplawnqpxst26dwwt3nuirvub7usss6lpjriuq6njnwr7wkulyue5yv534n6x4a7sq
+root@nfs-172-25-5-41:/opt/raid0/newminer# worker=f3sl6yi26pe3hac7lmgimxcdpuqiljwoabe6xb5rua4gcuejttsp2jt7yapp4wvaypnxe7evu53n7ymv2o22za      
+root@nfs-172-25-5-41:/opt/raid0/newminer# ls
+lotusminer  profile  start_lotusminer.sh
+root@nfs-172-25-5-41:/opt/raid0/newminer# ./lotusminer/bin/lotus-miner init --no-local-storage --sector-size 64GiB --owner=$owner --worker=$worker
+2023-06-22T19:41:33.906+0800    INFO    fil-consensus   filcns/upgrades.go:81   migration worker count: 32
+2023-06-22T19:41:33.909+0800    INFO    main    lotus-miner/init.go:129 Initializing lotus miner
+2023-06-22T19:41:33.910+0800    INFO    main    lotus-miner/init.go:157 no_fetch_params is not empty, skip fetch and check proof parameters
+2023-06-22T19:41:33.910+0800    INFO    main    lotus-miner/init.go:166 Trying to connect to full node RPC
+2023-06-22T19:41:33.921+0800    INFO    main    lotus-miner/init.go:178 Checking full node sync status
+Worker: 148; Base: 2970923; Target: 2970923 (diff: 0)
+State: complete; Current Epoch: 2970923; Todo: 0
+
+Done!
+2023-06-22T19:41:33.930+0800    INFO    main    lotus-miner/init.go:186 Checking if repo exists
+2023-06-22T19:41:33.930+0800    INFO    main    lotus-miner/init.go:202 Checking full node version
+2023-06-22T19:41:33.931+0800    INFO    main    lotus-miner/init.go:213 Initializing repo
+2023-06-22T19:41:33.931+0800    INFO    repo    repo/fsrepo.go:266      Initializing repo at '/opt/raid0/newminer/lotusminer'
+2023-06-22T19:41:33.935+0800    INFO    main    lotus-miner/init.go:428 Initializing libp2p identity
+2023-06-22T19:41:33.946+0800    INFO    badger  v2@v2.2007.4/levels.go:183      All 0 tables opened in 0s
+
+2023-06-22T19:41:33.950+0800    INFO    badger  v2@v2.2007.4/levels.go:183      All 0 tables opened in 0s
+
+2023-06-22T19:41:35.877+0800    INFO    main    lotus-miner/init.go:684 Initializing worker account f3sl6yi26pe3hac7lmgimxcdpuqiljwoabe6xb5rua4gcuejttsp2jt7yapp4wvaypnxe7evu53n7ymv2o22za, message: bafy2bzaceacxa4ygokd65xfbu2666c76zb26cas5feeozz7aq34show6kg7ei
+2023-06-22T19:41:35.877+0800    INFO    main    lotus-miner/init.go:685 Waiting for confirmation

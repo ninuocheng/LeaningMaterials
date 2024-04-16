@@ -1,0 +1,17 @@
+运维存储故障排查
+检查存储列表机器的挂载点是否异常
+for i in `lotus-miner storage list|awk '/Local:/{print $2}'`; do df -hT $i; done
+检查存储列表的数量
+lotus-miner storage list|grep 'Local:' |wc -l
+重启lotusminer程序，查看加载的存储列表数量
+grep 'New sector storage' /opt/raid0/lotusminer-window/lotusminer/logs |wc -l
+检查存储的配置文件列表数量
+awk -F'"' '$2 == "Path"{print $4}' /opt/raid0/lotusminer-window/lotusminer/storage.json |wc -l
+
+awk -F'"' '$2 == "Path"{print $4}' /opt/raid0/lotusminer-window/lotusminer/storage.json
+检查存储的配置文件列表的挂载点是否异常
+for i in `awk -F'"' '$2 == "Path"{print $4}' /opt/raid0/lotusminer-window/lotusminer/storage.json`; do df -hT $i; done|grep -v Mount
+检查存储的配置文件列表的挂载点的数量
+for i in `awk -F'"' '$2 == "Path"{print $4}' /opt/raid0/lotusminer-window/lotusminer/storage.json`; do df -hT $i; done|grep -v Mount -c
+或
+for i in `awk -F'"' '$2 == "Path"{print $4}' /opt/raid0/lotusminer-window/lotusminer/storage.json`; do df -hT $i; done|grep -v Mount |sort |uniq -c |sort

@@ -1,0 +1,39 @@
+DC发单及导入订单的流程：
+1.检查封装的程序是否启动
+    pgrep -a lotus
+2.检查算力机的程序是否正常启动
+   ansible  hosts -m shell -a 'pgrep -a lotus'
+3.检查算力机的gpu是否正常
+   ansible  hosts -m shell -a 'nvidia-smi -L'
+4.检查miner机及算力机的落盘存储是否挂载
+      ansible hosts -m shell -a 'df -h|grep /ceph/7pDC'
+5.检查miner机及算力机的存储的car是否挂载
+     ansible hosts -m shell -a 'df -h|grep /mnt/172.26.2.10/car'
+6.检查要发单节点的boost是否启动
+    pgrep -a boost
+7.发单机执行发单操作
+发单前，检查发单的cid是否都存在piece-172-16-30-44-0727.txt文件中
+n=0;for i in `cat piece-172-16-30-44-0727.cid`; do if grep $i piece-172-16-30-44-0727.txt;then let n++;fi; done
+echo $n
+发单前，可以先打印输出是否正常
+for i in head -n2  piece-172-16-30-44-0727.cid;do grep $i piece-172-16-30-44-0727.txt |awk '{print "boost offline-deal  --verified=true  --provider=f01656666  --duration=1056960  --commp="$2"   --car-size="$4"  --start-epoch=3093000 --piece-size=34359738368  --storage-price=0   --payload-cid="$1"  --remove-unsealed-copy=false "}';done
+然后，在执行发单操作
+建议备份，以防执行过程出错，方便重新执行
+cp piece-172-16-30-44-0727.cid piece-172-16-30-44-0727.cidbak
+for i in head -n2  piece-172-16-30-44-0727.cid;do grep $i piece-172-16-30-44-0727.txt |awk '{print "boost offline-deal  --verified=true  --provider=f01656666  --duration=1056960  --commp="$2"   --car-size="$4"  --start-epoch=3093000 --piece-size=34359738368  --storage-price=0   --payload-cid="$1"  --remove-unsealed-copy=false "}' |bash |egrep 'deal uuid|storage provider|payload cid|commp|start epoch|end epoch' |awk '{printf  $NF "|"}' |awk '{print $1}' >> ok-xc3-f01656666-172-16-30-44-0727.txt &&  sed -i '1d'  piece-172-16-30-44-0727.cid ;done
+备注：        --provider=f01656666    是要发单的节点号
+              --duration=1056960      扇区的生命周期367天      2880*367
+              --start-epoch=2880*7+最新的区块高度
+               注意要过滤的参数$1 $2 $4
+8.检查存储的car文件及数量
+n=0;for i in awk '{print $2}' f02229760_2700_import.txt; do if ls /mnt/172.26.2.*/car/${i}.car;then let n++; fi; done
+echo $n
+备注：f02229760_2700_import.txt是要导入的订单
+9.导入订单
+ 导入订单前，可以先打印输出是否正常
+for i in seq 2;do  head -n1 f02229760_2700_import.txt| awk '{print "boostd import-data   "$1"  /mnt/172.*/car/"$2".car"}' ;done
+然后，在执行导入订单的操作
+建议备份，以防执行过程出错，方便重新执行
+cp f02229760_2700_import.txt  f02229760_2700_import.txtbak
+for i in seq 2;do  head -n1 f02229760_2700_import.txt| awk '{print "boostd import-data   "$1"  /mnt/172.*/car/"$2".car"}' | bash && sed -i '1d' f02229760_2700_import.txt;done
+备注：f02229760_2700_import.txt是要导入的订单，注意要过滤的字段$1及$2
