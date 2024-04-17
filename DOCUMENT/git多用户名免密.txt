@@ -1,0 +1,64 @@
+Git多用户配置免密
+重装系统的centos7为例
+yum -y install git #先安装git
+github.com地址1: git@github.com:ninuocheng/LearnDataBook.git
+ssh-keygen -N "" -b 4096 -t rsa -C "ninuocheng@163.com" -f  /root/.ssh/id_rsa_ninuocheng  #生成公私钥
+复制公钥文件/root/.ssh/id_rsa_ninuocheng.pub的内容添加到github仓库Settings-SSH and GPG keys中
+添加私钥到本地，这个只是针对当前打开的bash生效
+ssh-agent bash
+ssh-add /root/.ssh/id_rsa_ninuocheng
+ssh-add -l
+ssh -T git@github.com #检查认证成功方可正常git克隆操作
+git clone git@github.com:ninuocheng/LearnDataBook.git
+cd LearnDataBook
+git config push.default simple
+配置到文件中，就永久性生效
+cat /root/.ssh/config  #config文件没有，就新建配置如下内容保持即可，不需要重启sshd服务，立刻生效
+Host ninuocheng   #该名称ninuocheng自定义的，后面要和远程仓库地址要保持一样
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /root/.ssh/id_rsa_ninuocheng   #要和生成的密钥文件保持一样
+Host Gzhichao
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /root/.ssh/id_rsa_Gzhichao
+
+git remote rename origin ninuocheng #仓库重命名目的就是标识性，可自定义随意的名称
+git remote set-url ninuocheng git@ninuocheng:ninuocheng/LearnDataBook.git #更新远程仓库地址，已配置的文件为准
+
+配置当前的用户名和邮箱
+git config user.name "ninuocheng"
+git config user.email "ninuocheng@163.com"
+
+github.com地址2: git@github.com:Gzhichao/LearningNoteBook.git
+
+ssh-keygen -N "" -b 4096 -t rsa -C "zhichaoguo75@gmail.com" -f  /root/.ssh/id_rsa_Gzhichao  #生成公私钥
+复制公钥文件/root/.ssh/id_rsa_Gzhichao.pub的内容添加到github仓库Settings-SSH and GPG keys中
+
+添加私钥到本地，这个只是针对当前打开的bash生效
+ssh-agent bash
+ssh-add /root/.ssh/id_rsa_Gzhichao
+ssh-add -l
+ssh -T git@github.com #检查
+
+git clone git@github.com:Gzhichao/LearningNoteBook.git  #克隆远程仓库到本地
+cd LearningNoteBook #切换到仓库目录中
+git config push.default simple
+
+配置到文件中，就永久性生效
+cat /root/.ssh/config  #config文件没有，就新建配置如下内容保持即可，不需要重启sshd服务，立刻生效
+Host ninuocheng   #该名称ninuocheng自定义的，后面要和远程仓库地址要保持一样
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /root/.ssh/id_rsa_ninuocheng   #要和生成的密钥文件保持一样
+Host Gzhichao
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /root/.ssh/id_rsa_Gzhichao
+
+git remote rename origin Gzhichao   #仓库重命名目的就是标识性，可自定义随意的名称
+git remote set-url Gzhichao git@Gzhichao:Gzhichao/LearningNoteBook.git #更新远程仓库地址，已配置的文件为准
+
+配置当前的用户名和邮箱
+git config user.name "Gzhichao"
+git config user.email "zhichaoguo75@gmail.com"
