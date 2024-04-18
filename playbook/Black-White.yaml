@@ -1,0 +1,15 @@
+---
+- hosts: iplist
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: "拷贝主机上的文件到目标服务器上"
+       copy:
+           src: "{{ item.src }}"
+           dest: "{{ item.dest }}"
+           owner: root
+           group: root
+           mode: "{{ item.mode }}"
+       with_items:
+           - { src: "/root/.guozhichao/hosts.allow", dest: "/etc/hosts.allow", mode: "0644" }
+           - { src: "/root/.guozhichao/hosts.deny", dest: "/etc/hosts.deny", mode: "0644" }
