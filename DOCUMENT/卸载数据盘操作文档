@@ -1,0 +1,6 @@
+#!/bin/bash
+#卸载数据盘
+for i in `seq 36`
+do
+      umount -fl /mnt/data$i
+done
