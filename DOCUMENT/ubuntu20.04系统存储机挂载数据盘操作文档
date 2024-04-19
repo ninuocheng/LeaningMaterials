@@ -3,6 +3,7 @@ timedatectl set-timezone Asia/Shanghai
 #数据盘符
 lsblk |grep -w 14.6T |awk '{print $1}' > 1.txt
 #数据盘符相对应的uuid路径
+>2.txt
 for i in `cat 1.txt`; do ls -l /dev/disk/by-uuid |grep -w $i |awk '{print "/dev/disk/by-uuid/"$9}' >> 2.txt; done
 #查看数据盘的uuid相对应的盘符
 awk '{print "ls -l",$1}' 2.txt |bash
@@ -23,6 +24,6 @@ df -h | grep -w 15T |awk '{printf $NF":"}' |awk '{print "mergerfs -o noforget,al
 #安装nfs-kernel-server
 apt -y install nfs-kernel-server
 #配置nfs
-echo "/export *(rw,async,no_root_squash,no_subtree_check,fsid=-1)" >>  /etc/exports
+echo "/export *(rw,async,no_root_squash,no_subtree_check,fsid=-1)" >> /etc/exports
 #重启nfs服务
 systemctl restart nfs-server.service
