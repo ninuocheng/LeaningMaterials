@@ -1,5 +1,6 @@
 导出当前节点所有的扇区
 lotus state sectors 矿工号 > 所有扇区  #导出的是该节点链上所有的扇区（存活和已终结）
+lotus state active-sectors 矿工号 > 有效扇区
 lotus-miner sectors check-expire --cutoff=2880000000 > 有效扇区 #导出的是所有有效的扇区
 如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
 lotus-miner proving faults > 错误扇区 #导出错误的扇区
