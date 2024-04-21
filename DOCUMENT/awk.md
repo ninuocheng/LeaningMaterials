@@ -1,4 +1,4 @@
-awk擅长取列
+#awk擅长取列
 awk '/root/' passwd #取包含root的行
 awk '/root/;/adm/' passwd #取包含root和adm的行
 awk '/root|adm/' passwd #取包含root和adm的行
