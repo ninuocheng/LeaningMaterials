@@ -1,20 +1,28 @@
 #!/bin/bash
 #开始时间
 start=$(date +%s)
+#当前的最新高度
+LatestBlockHeight=`lotus chain getblock $(lotus chain head 2>/dev/null| head -n 1) 2>/dev/null | jq .Height`
 #导出的矿工号
-MinerID="f0503420"
+MinerID="$1"
+[ -z "${MinerID}" ] && echo "没有给定矿工的位置参数" && exit
+#脚本的路径
+ScriptDir=`dirname $(readlink -f $0)`
+#导出扇区信息的主目录
+RootDir=$ScriptDir/$MinerID/$LatestBlockHeight
+[ ! -d "$RootDir" ] && mkdir -p $RootDir
 #所有的扇区
-AllSector="${MinerID}-AllSector"
+AllSector="$RootDir/AllSector"
 lotus state sectors $MinerID > $AllSector
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
-ActiveSector="${MinerID}-ActiveSector"
+ActiveSector="$RootDir/ActiveSector"
 lotus state active-sectors $MinerID > $ActiveSector
 #所有的扇区信息
-AllSectorInfo="${MinerID}-AllSectorInfo"
+AllSectorInfo="$RootDir/AllSectorInfo"
 #有效的扇区信息
-ActiveSectorInfo="${MinerID}-ActiveSectorInfo"
+ActiveSectorInfo="$RootDir/ActiveSectorInfo"
 #终结的扇区信息
-TerminatedSectorInfo="${MinerID}-TerminatedSectorInfo"
+TerminatedSectorInfo="$RootDir/TerminatedSectorInfo"
 [ ! -f "$AllSector" ] && echo "${AllSector} 不存在，请检查" && exit
 [ ! -f "$ActiveSector" ] && echo "${ActiveSector} 不存在，请检查" && exit
 #创建命名管道
@@ -24,7 +32,7 @@ exec 100<>ch3
 #删除ch3文件防止影响下次的执行（删除后不影响文件描述符的使用）
 rm -f ch3
 #定义用于控制进程数量的变量
-ProcessNub="40"
+ProcessNub="10"
 #通过文件描述符往命名管道中写入任意数据,用于控制进程数量
 for i in `seq $ProcessNub`
 do
