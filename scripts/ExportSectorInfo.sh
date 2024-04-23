@@ -17,19 +17,9 @@ lotus state sectors $MinerID > $AllSector
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
 ActiveSector="$RootDir/ActiveSector"
 lotus state active-sectors $MinerID > $ActiveSector
-<<<<<<< HEAD
 #除去有效扇区之外的扇区
 TerminatedSector="$RootDir/TerminatedSector"
 sort $AllSector $ActiveSector $ActiveSector|uniq -u > $TerminatedSector
-=======
-#有效扇区的扇区状态
-ActiveStateSector="$RootDir/ActiveStateSector"
-#除去有效扇区之外的扇区
-TerminatedSector="$RootDir/TerminatedSector"
-sort $AllSector $ActiveSector $ActiveSector > $TerminatedSector
-#除去有效扇区之外的扇区状态
-TerminatedStateSector="$RootDir/TerminatedStateSector"
->>>>>>> 5925a66da1c8ffc1c991919698940bb4b866401e
 #所有的扇区信息
 AllSectorInfo="$RootDir/AllSectorInfo"
 #有效的扇区信息
@@ -45,11 +35,7 @@ exec 100<>ch3
 #删除ch3文件防止影响下次的执行（删除后不影响文件描述符的使用）
 rm -f ch3
 #定义用于控制进程数量的变量
-<<<<<<< HEAD
 ProcessNub="60"
-=======
-ProcessNub="50"
->>>>>>> 5925a66da1c8ffc1c991919698940bb4b866401e
 #通过文件描述符往命名管道中写入任意数据,用于控制进程数量
 for i in `seq $ProcessNub`
 do
@@ -67,7 +53,6 @@ for i in `awk -F: '{print $1}' $ActiveSector`
 do
 	read -u100
 	{
-<<<<<<< HEAD
 		lotus state sector $MinerID $i 2>/dev/null |awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' >> $ActiveSectorInfo
 	        echo >&100
 	} &
@@ -78,15 +63,10 @@ do
 	{
 		lotus state sector $MinerID $i 2>/dev/null |awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' >> $TerminatedSectorInfo
 	        echo >&100
-=======
-		lotus state sector $MinerID $i >> $ActiveStateSector
-		echo >&100
->>>>>>> 5925a66da1c8ffc1c991919698940bb4b866401e
 	} &
 done
 #等待所有后台进程执行完成,才会继续执行下面的操作
 wait
-<<<<<<< HEAD
 if [ -f "$TerminatedSectorInfo" ];then
         sort $TerminatedSectorInfo $ActiveSectorInfo |uniq > $AllSectorInfo
         t=`wc -l < $TerminatedSectorInfo`
@@ -95,20 +75,6 @@ if [ -f "$TerminatedSectorInfo" ];then
 else
 	cp -a $ActiveSectorInfo $AllSectorInfo
 fi
-=======
-awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' $ActiveStateSector |sed 's#^[ ]*##g' > $ActiveSectorInfo
-for i in `awk -F: '{print $1}' $ActiveSectorOut`
-do
-	read -u100
-	{
-		lotus state sector $MinerID $i >> $TerminatedStateSector
-		echo >&100
-	} &
-done
-wait
-awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' $TerminatedStateSector |sed 's#^[ ]*##g' > $TerminatedSectorInfo
-sort $TerminatedSectorInfo $ActiveSectorInfo |uniq > $AllSectorInfo
->>>>>>> 5925a66da1c8ffc1c991919698940bb4b866401e
 #排序统计
 n=`wc -l < $AllSectorInfo`
 m=`wc -l < $ActiveSectorInfo`
