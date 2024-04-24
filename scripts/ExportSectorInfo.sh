@@ -17,9 +17,20 @@ lotus state sectors $MinerID > $AllSector
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
 ActiveSector="$RootDir/ActiveSector"
 lotus state active-sectors $MinerID > $ActiveSector
-#除去有效扇区之外的扇区
-TerminatedSector="$RootDir/TerminatedSector"
-sort $AllSector $ActiveSector $ActiveSector|uniq -u > $TerminatedSector
+#错误扇区
+FaultSector="$RootDir/FaultSector"
+#准备的错误扇区
+PrepareFaultSector="$ScriptDir/$MinerID/PrepareFaultSector"
+#除去存活扇区之外的扇区才是终止掉的扇区
+ActiveOutSector="$RootDir/TerminatedSector"
+if [ -f "$PrepareFaultSector" ];then
+        mv $PrepareFaultSector $FaultSector
+	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $ActiveOutSector #有效之外的扇区
+	TerminatedSector="$RootDir/TerminatedSector"
+	sort $ActiveOutSector $FaultSector $FaultSector |uniq -u > $TerminatedSector #终止掉的扇区，不考虑当前有恢复中的扇区和未证明的扇区,如果有也需要除去，才是终止的数量
+else
+	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $TerminatedSector
+fi
 #所有的扇区信息
 AllSectorInfo="$RootDir/AllSectorInfo"
 #有效的扇区关键信息
