@@ -22,30 +22,22 @@ TerminatedSector="$RootDir/TerminatedSector"
 sort $AllSector $ActiveSector $ActiveSector|uniq -u > $TerminatedSector
 #所有的扇区信息
 AllSectorInfo="$RootDir/AllSectorInfo"
-#有效的扇区关键信息
-ActiveSectorKeyInfo="$RootDir/ActiveSectorKeyInfo"
-#更新有效的扇区导出信息
-ActiveSectorUpdateInfo="$RootDir/ActiveSectorUpdateInfo"
 #有效的扇区信息
 ActiveSectorInfo="$RootDir/ActiveSectorInfo"
 #终结的扇区信息
 TerminatedSectorInfo="$RootDir/TerminatedSectorInfo"
-#终结的扇区关键信息
-TerminatedSectorKeyInfo="$RootDir/TerminatedSectorKeyInfo"
-#更新终结的扇区导出信息
-TerminatedSectorUpdateInfo="$RootDir/TerminatedSectorUpdateInfo"
 [ ! -f "$AllSector" ] && echo "${AllSector} 不存在，请检查" && exit
 [ ! -f "$ActiveSector" ] && echo "${ActiveSector} 不存在，请检查" && exit
-#线程数量
-thread_nub="60"
 #创建命名管道
 mkfifo ch3
 #创建文件描述符100，并关联到管道文件
 exec 100<>ch3
 #删除ch3文件防止影响下次的执行（删除后不影响文件描述符的使用）
 rm -f ch3
+#定义用于控制进程数量的变量
+ProcessNub="60"
 #通过文件描述符往命名管道中写入任意数据,用于控制进程数量
-for ((i=0;i<$thread_nub;i++))
+for i in `seq $ProcessNub`
 do
 	echo >&100
 done
@@ -61,8 +53,7 @@ for i in `awk -F: '{print $1}' $ActiveSector`
 do
 	read -u100
 	{
-		StateSector=`lotus state sector $MinerID $i 2>/dev/null`
-		echo $StateSector >> $ActiveSectorKeyInfo
+		lotus state sector $MinerID $i 2>/dev/null |awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' >> $ActiveSectorInfo
 	        echo >&100
 	} &
 done
@@ -70,21 +61,17 @@ for i in `awk -F: '{print $1}' $TerminatedSector`
 do
 	read -u100
 	{
-		StateSector=`lotus state sector $MinerID $i 2>/dev/null`
-		echo $StateSector >> $TerminatedSectorKeyInfo
+		lotus state sector $MinerID $i 2>/dev/null |awk '/SectorNumber:/{$1="";SectorNumber=$0} /Activation:/{$1="";Activation=$0} /Expiration:/{$1="";Expiration=$0} /InitialPledge:/{$1="";InitialPledge=$0} /ExpectedDayReward:/{$1="";ExpectedDayReward=$0} /ExpectedStoragePledge:/{$1="";ExpectedStoragePledge=$0} /Partition:/ {print SectorNumber,Activation,Expiration,InitialPledge,ExpectedDayReward,ExpectedStoragePledge;SectorNumber="";Activation="";Expiration="";InitialPledge="";ExpectedDayReward="";ExpectedStoragePledge=""}' >> $TerminatedSectorInfo
 	        echo >&100
 	} &
 done
 #等待所有后台进程执行完成,才会继续执行下面的操作
 wait
-awk -F'[]|[]' '{print $1,$NF}' $ActiveSectorKeyInfo > $ActiveSectorUpdateInfo
-awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
-if [ -f "$TerminatedSectorKeyInfo" ];then
-	awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
-	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
+if [ -f "$TerminatedSectorInfo" ];then
         sort $TerminatedSectorInfo $ActiveSectorInfo |uniq > $AllSectorInfo
         t=`wc -l < $TerminatedSectorInfo`
         sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo
+        sed -i "1iSector                     Activation                                       Expiration                          InitialPledge          ExpectedDayReward        ExpectedStoragePledge" ${TerminatedSectorInfo}-$t
 else
 	cp -a $ActiveSectorInfo $AllSectorInfo
 fi
@@ -93,6 +80,9 @@ n=`wc -l < $AllSectorInfo`
 m=`wc -l < $ActiveSectorInfo`
 sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
 sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo
+#扇区的关键字段信息
+sed -i "1iSector                     Activation                                       Expiration                          InitialPledge          ExpectedDayReward        ExpectedStoragePledge" ${AllSectorInfo}-$n 
+sed -i "1iSector                     Activation                                       Expiration                          InitialPledge          ExpectedDayReward        ExpectedStoragePledge" ${ActiveSectorInfo}-$m
 #结束时间
 end=$(date +%s)
 #耗时秒数
@@ -100,4 +90,3 @@ echo "Total execution time: $((end - start))s"
 #关闭文件描述符的读和写
 exec 100<&-
 exec 100>&-
-exit 77
