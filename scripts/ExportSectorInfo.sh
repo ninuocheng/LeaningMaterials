@@ -22,11 +22,11 @@ FaultSector="$RootDir/FaultSector"
 #准备的错误扇区
 PrepareFaultSector="$ScriptDir/$MinerID/PrepareFaultSector"
 #除去存活扇区之外的扇区才是终止掉的扇区
-ActiveOutSector="$RootDir/TerminatedSector"
+ActiveOutSector="$RootDir/TerminatedOutSector" #有效之外的扇区
+TerminatedSector="$RootDir/TerminatedSector"   #终止掉的扇区
 if [ -f "$PrepareFaultSector" ];then
         mv $PrepareFaultSector $FaultSector
-	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $ActiveOutSector #有效之外的扇区
-	TerminatedSector="$RootDir/TerminatedSector"
+	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $ActiveOutSector
 	sort $ActiveOutSector $FaultSector $FaultSector |uniq -u > $TerminatedSector #终止掉的扇区，不考虑当前有恢复中的扇区和未证明的扇区,如果有也需要除去，才是终止的数量
 else
 	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $TerminatedSector
