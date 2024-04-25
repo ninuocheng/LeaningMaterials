@@ -35,9 +35,8 @@ if [ -f "$PrepareFaultSectorID" ];then
         mv $PrepareFaultSectorID $FaultSectorID
 	sort $FaultSectorID $EffectiveSectorID |uniq > $ActiveSectorID
 	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
-	rm $EffectiveSectorID
 else
-	mv $EffectiveSectorID $ActiveSectorID
+	cp -a $EffectiveSectorID $ActiveSectorID
 	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
 fi
 #所有的扇区信息
@@ -97,23 +96,28 @@ do
 done < $TerminatedSectorID
 #等待所有后台进程执行完成,才会继续执行下面的操作
 wait
-awk -F'[]|[]' '{print $1,$NF}' $ActiveSectorKeyInfo > $ActiveSectorUpdateInfo
-awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
+if [ -f "$ActiveSectorKeyInfo" ];then
+	awk -F'[]|[]' '{print $1,$NF}' $ActiveSectorKeyInfo > $ActiveSectorUpdateInfo
+	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
+        m=`wc -l < $ActiveSectorInfo`
+        sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo
+fi
 if [ -f "$TerminatedSectorKeyInfo" ];then
 	awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
-        sort $TerminatedSectorInfo $ActiveSectorInfo |uniq > $AllSectorInfo
         t=`wc -l < $TerminatedSectorInfo`
-        sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo $TerminatedSector $TerminatedSectorID
+        sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo $TerminatedSector
+        if [ -f "${ActiveSectorInfo}-$m" ];then
+		sort ${TerminatedSectorInfo}-$t ${ActiveSectorInfo}-$m |uniq > $AllSectorInfo
+	else
+		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
+	fi
 else
-	cp -a $ActiveSectorInfo $AllSectorInfo
-	rm $TerminatedSectorID
+	cp -a ${ActiveSectorInfo}-$m $AllSectorInfo
 fi
 #排序统计
 n=`wc -l < $AllSectorInfo`
-m=`wc -l < $ActiveSectorInfo`
-sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo $AllSector $AllSectorID
-sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo $ActiveSectorID $EffectiveSector
+sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo $AllSector $EffectiveSector
 #结束时间
 end=$(date +%s)
 #耗时秒数
