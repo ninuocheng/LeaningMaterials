@@ -14,48 +14,39 @@ RootDir=$ScriptDir/$MinerID/$LatestBlockHeight
 #所有的扇区
 AllSector="$RootDir/AllSector"
 lotus state sectors $MinerID > $AllSector
-#所有的扇区ID
-AllSectorID="$RootDir/AllSectorID"
-awk -F: '{print $1}' $AllSector > $AllSectorID
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
-EffectiveSector="$RootDir/EffectiveSector"
-lotus state active-sectors $MinerID > $EffectiveSector
-#有效的扇区ID
-EffectiveSectorID="$RootDir/EffectiveSectorID"
-awk -F: '{print $1}' $EffectiveSector > $EffectiveSectorID
-#存活的扇区
-ActiveSectorID="$RootDir/ActiveSectorID"
-#存活中的有效之外扇区ID,如果不考虑当前链上未证明的扇区，即错误扇区ID
-FaultSectorID="$RootDir/FaultSectorID"
+ActiveSector="$RootDir/ActiveSector"
+lotus state active-sectors $MinerID > $ActiveSector
+#错误扇区
+FaultSector="$RootDir/FaultSector"
 #准备的错误扇区
-PrepareFaultSectorID="$ScriptDir/$MinerID/PrepareFaultSectorID"
-#所有扇区中的存活扇区之外的扇区才是终止掉的扇区
-TerminatedSectorID="$RootDir/TerminatedSectorID"   #终止掉的扇区
-if [ -f "$PrepareFaultSectorID" ];then
-        mv $PrepareFaultSectorID $FaultSectorID
-	sort $FaultSectorID $EffectiveSectorID |uniq > $ActiveSectorID
-	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
-	rm $EffectiveSectorID
+PrepareFaultSector="$ScriptDir/$MinerID/PrepareFaultSector"
+#除去存活扇区之外的扇区才是终止掉的扇区
+ActiveOutSector="$RootDir/TerminatedOutSector" #有效之外的扇区
+TerminatedSector="$RootDir/TerminatedSector"   #终止掉的扇区
+if [ -f "$PrepareFaultSector" ];then
+        mv $PrepareFaultSector $FaultSector
+	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $ActiveOutSector
+	sort $ActiveOutSector $FaultSector $FaultSector |uniq -u > $TerminatedSector #终止掉的扇区，不考虑当前有恢复中的扇区和未证明的扇区,如果有也需要除去，才是终止的数量
 else
-	mv $EffectiveSectorID $ActiveSectorID
-	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
+	sort $AllSector $ActiveSector $ActiveSector |uniq -u > $TerminatedSector
 fi
 #所有的扇区信息
 AllSectorInfo="$RootDir/AllSectorInfo"
-#存活的扇区关键信息
+#有效的扇区关键信息
 ActiveSectorKeyInfo="$RootDir/ActiveSectorKeyInfo"
-#更新存活的扇区导出信息
+#更新有效的扇区导出信息
 ActiveSectorUpdateInfo="$RootDir/ActiveSectorUpdateInfo"
-#存活的扇区信息
+#有效的扇区信息
 ActiveSectorInfo="$RootDir/ActiveSectorInfo"
+#终结的扇区信息
+TerminatedSectorInfo="$RootDir/TerminatedSectorInfo"
 #终结的扇区关键信息
 TerminatedSectorKeyInfo="$RootDir/TerminatedSectorKeyInfo"
 #更新终结的扇区导出信息
 TerminatedSectorUpdateInfo="$RootDir/TerminatedSectorUpdateInfo"
-#终结的扇区信息
-TerminatedSectorInfo="$RootDir/TerminatedSectorInfo"
-[ ! -f "$AllSectorID" ] && echo "${AllSectorID} 不存在，请检查" && exit
-[ ! -f "$ActiveSectorID" ] && echo "${ActiveSectorID} 不存在，请检查" && exit
+[ ! -f "$AllSector" ] && echo "${AllSector} 不存在，请检查" && exit
+[ ! -f "$ActiveSector" ] && echo "${ActiveSector} 不存在，请检查" && exit
 #线程数量
 thread_nub="60"
 #创建命名管道
@@ -77,24 +68,24 @@ done
 #这时命名管道ch3中数据量是1条，会取消阻塞启动一个新的进程
 #启动之后，ch3中数据量是0条，继续造成阻塞，当有命令执行完成后，就会有新的进程继续执行
 #循环往复，直到执行循环结束
-while read line
+for i in `awk -F: '{print $1}' $ActiveSector`
 do
 	read -u100
 	{
-		StateSector=`lotus state sector $MinerID $line 2>/dev/null`
+		StateSector=`lotus state sector $MinerID $i 2>/dev/null`
 		echo $StateSector >> $ActiveSectorKeyInfo
 	        echo >&100
 	} &
-done < $ActiveSectorID
-while read line
+done
+for i in `awk -F: '{print $1}' $TerminatedSector`
 do
 	read -u100
 	{
-		StateSector=`lotus state sector $MinerID $line 2>/dev/null`
+		StateSector=`lotus state sector $MinerID $i 2>/dev/null`
 		echo $StateSector >> $TerminatedSectorKeyInfo
 	        echo >&100
 	} &
-done < $TerminatedSectorID
+done
 #等待所有后台进程执行完成,才会继续执行下面的操作
 wait
 awk -F'[]|[]' '{print $1,$NF}' $ActiveSectorKeyInfo > $ActiveSectorUpdateInfo
@@ -104,16 +95,15 @@ if [ -f "$TerminatedSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
         sort $TerminatedSectorInfo $ActiveSectorInfo |uniq > $AllSectorInfo
         t=`wc -l < $TerminatedSectorInfo`
-        sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo $TerminatedSector $TerminatedSectorID
+        sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo
 else
 	cp -a $ActiveSectorInfo $AllSectorInfo
-	rm $TerminatedSectorID
 fi
 #排序统计
 n=`wc -l < $AllSectorInfo`
 m=`wc -l < $ActiveSectorInfo`
-sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo $AllSector $AllSectorID
-sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo $ActiveSectorID $EffectiveSector
+sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
+sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo
 #结束时间
 end=$(date +%s)
 #耗时秒数
