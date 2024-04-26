@@ -121,7 +121,6 @@ else
 		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
 	fi
 fi
-#排序统计
 if [ -f "$AllSectorInfo" ];then
 	n=`wc -l < $AllSectorInfo`
 	sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
