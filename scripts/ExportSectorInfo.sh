@@ -17,12 +17,14 @@ lotus state sectors $MinerID > $AllSector
 #所有的扇区ID
 AllSectorID="$RootDir/AllSectorID"
 awk -F: '{print $1}' $AllSector > $AllSectorID
+rm $AllSector
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
 EffectiveSector="$RootDir/EffectiveSector"
 lotus state active-sectors $MinerID > $EffectiveSector
 #有效的扇区ID
 EffectiveSectorID="$RootDir/EffectiveSectorID"
 awk -F: '{print $1}' $EffectiveSector > $EffectiveSectorID
+rm $EffectiveSector
 #存活的扇区
 ActiveSectorID="$RootDir/ActiveSectorID"
 #存活中的有效之外扇区ID,如果不考虑当前链上未证明的扇区，即错误扇区ID
@@ -101,23 +103,29 @@ if [ -f "$ActiveSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
         m=`wc -l < $ActiveSectorInfo`
         sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo
-fi
-if [ -f "$TerminatedSectorKeyInfo" ];then
-	awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
-	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
-        t=`wc -l < $TerminatedSectorInfo`
-        sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo $TerminatedSector
-        if [ -f "${ActiveSectorInfo}-$m" ];then
-		sort ${TerminatedSectorInfo}-$t ${ActiveSectorInfo}-$m |uniq > $AllSectorInfo
+	if [ -f "$TerminatedSectorKeyInfo" ];then
+		awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
+		awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
+		t=`wc -l < $TerminatedSectorInfo`
+		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
+		sort ${ActiveSectorInfo}-$m ${TerminatedSectorInfo}-$t |uniq > $AllSectorInfo
 	else
-		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
+		cp -a ${ActiveSectorInfo}-$m $AllSectorInfo
 	fi
 else
-	cp -a ${ActiveSectorInfo}-$m $AllSectorInfo
+	if [ -f "$TerminatedSectorKeyInfo" ];then
+		awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
+		awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
+		t=`wc -l < $TerminatedSectorInfo`
+		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
+		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
+	fi
 fi
 #排序统计
-n=`wc -l < $AllSectorInfo`
-sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo $AllSector $EffectiveSector
+if [ -f "$AllSectorInfo" ];then
+	n=`wc -l < $AllSectorInfo`
+	sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
+fi
 #结束时间
 end=$(date +%s)
 #耗时秒数
