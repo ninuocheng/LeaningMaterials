@@ -9,15 +9,8 @@ MinerID="$1"
 #脚本的路径
 ScriptDir=`dirname $(readlink -f $0)`
 #导出扇区信息的主目录
-RootDir=$ScriptDir/$MinerID/All/$LatestBlockHeight
+RootDir=$ScriptDir/$MinerID/Active/$LatestBlockHeight
 [ ! -d "$RootDir" ] && mkdir -p $RootDir
-#所有的扇区
-AllSector="$RootDir/AllSector"
-lotus state sectors $MinerID > $AllSector
-#所有的扇区ID
-AllSectorID="$RootDir/AllSectorID"
-awk -F: '{print $1}' $AllSector > $AllSectorID
-rm $AllSector
 #有效的扇区,如果该节点当前既没有错误扇区，也没有要恢复中的扇区和未证明的扇区，那么存活的扇区数量就是当前有效的扇区数量。否则还需要导出错误的扇区，恢复中的扇区和未证明的扇区，才是当前存活的扇区数量
 EffectiveSector="$RootDir/EffectiveSector"
 lotus state active-sectors $MinerID > $EffectiveSector
@@ -36,26 +29,15 @@ TerminatedSectorID="$RootDir/TerminatedSectorID"   #终止掉的扇区
 if [ -f "$PrepareFaultSectorID" ];then
         mv $PrepareFaultSectorID $FaultSectorID
 	sort $FaultSectorID $EffectiveSectorID |uniq > $ActiveSectorID
-	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
 else
 	mv $EffectiveSectorID $ActiveSectorID
-	sort $AllSectorID $ActiveSectorID $ActiveSectorID |uniq -u > $TerminatedSectorID
 fi
-#所有的扇区信息
-AllSectorInfo="$RootDir/AllSectorInfo"
 #存活的扇区关键信息
 ActiveSectorKeyInfo="$RootDir/ActiveSectorKeyInfo"
 #更新存活的扇区导出信息
 ActiveSectorUpdateInfo="$RootDir/ActiveSectorUpdateInfo"
 #存活的扇区信息
 ActiveSectorInfo="$RootDir/ActiveSectorInfo"
-#终结的扇区关键信息
-TerminatedSectorKeyInfo="$RootDir/TerminatedSectorKeyInfo"
-#更新终结的扇区导出信息
-TerminatedSectorUpdateInfo="$RootDir/TerminatedSectorUpdateInfo"
-#终结的扇区信息
-TerminatedSectorInfo="$RootDir/TerminatedSectorInfo"
-[ ! -f "$AllSectorID" ] && echo "${AllSectorID} 不存在，请检查" && exit
 [ ! -f "$ActiveSectorID" ] && echo "${ActiveSectorID} 不存在，请检查" && exit
 #线程数量
 thread_nub="60"
@@ -70,7 +52,7 @@ for ((i=0;i<$thread_nub;i++))
 do
 	echo >&100
 done
-#遍历循环所有的扇区号，执行过程中保持同时有限制的进程个数并发执行
+#遍历循环扇区号，执行过程中保持同时有限制的进程个数并发执行
 #首次并发执行限制的进程个数后，这时的命名管道ch3中数据量是0条，会造成阻塞
 #read -u100表示每次从命名管道读取一行
 #{...} &表示括号内的一组命令后台执行
@@ -87,15 +69,6 @@ do
 	        echo >&100
 	} &
 done < $ActiveSectorID
-while read line
-do
-	read -u100
-	{
-		StateSector=`lotus state sector $MinerID $line 2>/dev/null`
-		echo $StateSector >> $TerminatedSectorKeyInfo
-	        echo >&100
-	} &
-done < $TerminatedSectorID
 #等待所有后台进程执行完成,才会继续执行下面的操作
 wait
 if [ -f "$ActiveSectorKeyInfo" ];then
@@ -103,27 +76,6 @@ if [ -f "$ActiveSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
         m=`wc -l < $ActiveSectorInfo`
         sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo
-	if [ -f "$TerminatedSectorKeyInfo" ];then
-		awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
-		awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
-		t=`wc -l < $TerminatedSectorInfo`
-		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
-		sort ${ActiveSectorInfo}-$m ${TerminatedSectorInfo}-$t |uniq > $AllSectorInfo
-	else
-		cp -a ${ActiveSectorInfo}-$m $AllSectorInfo
-	fi
-else
-	if [ -f "$TerminatedSectorKeyInfo" ];then
-		awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
-		awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
-		t=`wc -l < $TerminatedSectorInfo`
-		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
-		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
-	fi
-fi
-if [ -f "$AllSectorInfo" ];then
-	n=`wc -l < $AllSectorInfo`
-	sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
 fi
 #结束时间
 end=$(date +%s)
