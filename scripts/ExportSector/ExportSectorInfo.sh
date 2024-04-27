@@ -103,12 +103,14 @@ if [ -f "$ActiveSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
         m=`wc -l < $ActiveSectorInfo`
         sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo
+        wc -l ${ActiveSectorInfo}-$m
 	if [ -f "$TerminatedSectorKeyInfo" ];then
 		awk -F'[]|[]' '{print $1,$NF}' $TerminatedSectorKeyInfo > $TerminatedSectorUpdateInfo
 		awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $TerminatedSectorUpdateInfo > $TerminatedSectorInfo
 		t=`wc -l < $TerminatedSectorInfo`
 		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
 		sort ${ActiveSectorInfo}-$m ${TerminatedSectorInfo}-$t |uniq > $AllSectorInfo
+		wc -l ${TerminatedSectorInfo}-$t
 	else
 		cp -a ${ActiveSectorInfo}-$m $AllSectorInfo
 	fi
@@ -119,11 +121,13 @@ else
 		t=`wc -l < $TerminatedSectorInfo`
 		sort -nk1 $TerminatedSectorInfo > ${TerminatedSectorInfo}-$t && rm $TerminatedSectorInfo $TerminatedSectorKeyInfo $TerminatedSectorUpdateInfo
 		cp -a ${TerminatedSectorInfo}-$t $AllSectorInfo
+		wc -l ${TerminatedSectorInfo}-$t
 	fi
 fi
 if [ -f "$AllSectorInfo" ];then
 	n=`wc -l < $AllSectorInfo`
 	sort -nk1 $AllSectorInfo > ${AllSectorInfo}-$n && rm $AllSectorInfo
+	wc -l ${AllSectorInfo}-$n
 fi
 #结束时间
 end=$(date +%s)

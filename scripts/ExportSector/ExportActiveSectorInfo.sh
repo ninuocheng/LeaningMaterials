@@ -76,6 +76,7 @@ if [ -f "$ActiveSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $ActiveSectorUpdateInfo > $ActiveSectorInfo
         m=`wc -l < $ActiveSectorInfo`
         sort -nk1 $ActiveSectorInfo > ${ActiveSectorInfo}-$m && rm $ActiveSectorInfo $ActiveSectorKeyInfo $ActiveSectorUpdateInfo
+	wc -l ${ActiveSectorInfo}-$m
 fi
 #结束时间
 end=$(date +%s)

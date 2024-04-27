@@ -64,6 +64,7 @@ if [ -f "$SelfDeterminedSectorKeyInfo" ];then
 	awk '{$1=$3=$4=$5=$6=$7=$NF=$(NF-1)=$(NF-2)=$(NF-3)=$(NF-13)=$(NF-14)=$(NF-15)=$(NF-16)="";print}' $SelfDeterminedSectorUpdateInfo > $SelfDeterminedSectorInfo
         m=`wc -l < $SelfDeterminedSectorInfo`
         sort -nk1 $SelfDeterminedSectorInfo > ${SelfDeterminedSectorInfo}-$m && rm $SelfDeterminedSectorInfo $SelfDeterminedSectorKeyInfo $SelfDeterminedSectorUpdateInfo
+	wc -l ${SelfDeterminedSectorInfo}-$m
 fi
 #结束时间
 end=$(date +%s)
