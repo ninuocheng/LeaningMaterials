@@ -105,3 +105,17 @@ source FileName
 source命令与shell scripts的区别是，source在当前bash环境下执行命令，而scripts是启动一个子shell来执行命令。这样如果把设置环境变量（或alias等等）的命令写进scripts中，就只会影响子shell,无法改变当前的BASH,所以通过文件（命令列）设置环境变量时，要用source 命令。
 
 source跟./xxx.sh或bash xxx.sh最大的不同就是前者在文件中设置的变量对当前shell是可见的，而后者设置的变量对当前shell是不可见的。要知道./xxx.sh和bash xxx.sh都是在当前shell的子shell中执行的，子shell中的变量不会影响父shell，而source是把文件中的命令都读出来一个个执行，所有的变量其实就是在父shell中设置的。
+
+总结:
+
+　　1.declare var=value   可以声明一个shell变量(与之等价的是 var=value,typeset var=value)，也可以直接用declare -x var=value 声明一个变量并直接输出到环境变量，也可以加上-r参数表示只读变量。
+
+　　2.unset var 可以删除变量，包括shell变量和环境变量(当前用户变量)，不能够删除具有只读属性的shell变量和环境变量。
+
+　　3.set -a var  可以将var变量输出到环境变量
+
+　　4.env可以查看所有的环境变量，可以加管道命令与grep命令过滤变量
+
+ 　   5.export var=value用于定义一个环境变量，修改环境变量也是这个，等价于 declare -x var=name
+
+　　　export -n var 用于从环境变量删除此变量，但是shell变量中此变量仍然存在。
