@@ -1,18 +1,22 @@
 #!/bin/bash
-#数据盘盘符
-#lsblk |awk '/14.6T/{print $1}' > 1.txt
-awk '/14.6T/{print $1}' 1.txt > 2.txt
-#遍历数据盘,赋值到数组
-for i in `cat 2.txt`
+#数据盘大小
+DiskSize=$1
+[ -z "$DiskSize" ] && echo "没有给定数据盘大小的位置参数" && exit 1
+[ $# -gt 1 ] && echo "位置参数数量有误" && exit 2
+#导出数据盘盘符及uuid到文件
+lsblk -o name,uuid,size|awk -v DiskSize=$DiskSize '$NF == DiskSize{print}' > DiskInfo
+#初始化数组
+Array1=()
+#遍历数据盘的uuid,赋值到数组
+for i in `awk '{print $2}' DiskInfo`
 do
-   echo "${#Array1[*]}"
-   #Array1[${#Array1[*]}]=$i  #未进行过任何删减的情况下，最后一个索引值加1也就是要添加的参数对应的索引值
-   Array1=("${Array1[@]}" $i) #直接获取源数组的全部元素再加上新要添加的元素，一并重新赋予该数组，重新刷新定义索引，可以避免中间有删减的情况 注：双引号不能省略，否则数组中存在包含空格的元素时会按空格将元素拆分成多个 不能将“@”替换为“*”，如果替换为“* ”，不加双引号时与“@”的表现一致，加双引号时，会将数组arr中的所有元素作为一个元素添加到数组中
-   #Array1+=($i)              #使用arr+=(元素 元素 元素)添加
+   Array1+=($i)              #追加元素到数组
 done
 #遍历数组的元素下标，执行相关的命令
 for j in ${!Array1[*]}
 do
-   echo "mkdir -p /mnt/disk$[j+1]"  #创建挂载点
-   echo "mount /dev/${Array1[$j]} /mnt/disk$[j+1]" #挂载数据盘
+   #创建挂载点
+   [ ! -d "/mnt/${Array1[$j]}" ] && mkdir -p /mnt/${Array1[$j]}
+   #挂载数据盘到相应的uuid目录，主要目的是更方便排查故障盘的uuid
+   mount -U ${Array1[$j]} /mnt/${Array1[$j]}
 done
