@@ -14,6 +14,7 @@ DiskInfo="$ScriptDir/DiskInfo"
 [ -f "$DiskInfo" ] && mv $DiskInfo $BakDir/DiskInfo-$BakTime
 #导出数据盘盘符及uuid到文件
 lsblk -o name,uuid,serial,fstype,size|awk -v DiskSize=$DiskSize '$NF == DiskSize'|column -t > $DiskInfo
+[ ! -s "$DiskInfo" ] && echo "$DiskInfo 输出内容为空" && exit 3
 #定义关联数组
 declare -A Array1
 #遍历数据盘的uuid,赋值到数组
