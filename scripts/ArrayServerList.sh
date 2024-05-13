@@ -4,32 +4,47 @@ ScriptDir=`dirname $(readlink -f $0)`
 #机器列表
 ServerList="机器列表-Sheet1.csv"
 [ ! -f "$ScriptDir/$ServerList" ] && echo "$ScriptDir/$ServerList 不存在" && exit 1
+#定义关联数组
 declare -A ReplaceMinerIDArray
 declare -A ReplaceIPArray
 declare -A ReplacePortArray
 declare -A ReplaceAreaArray
 declare -A ReplaceUserArray
+#遍历准备要更新的列表，赋值关键字段到数组
 while read MinerID IP Port Area User GPUNum SytemDiskUse NVMEUse GPUCk LotusProcess WinningProcess WindowProcess SealingProcess
 do
+	#字段中如果有特殊符号，需要去掉，不然会影响awk匹配异常
 	Area=${Area%(*}
         User=${User%(*}
+	#如果字段中有相同的，需要做如下操作，不然会影响sed匹配有问题
         [ "$MinerID" == "$Area" ] && MinerID=""
         [ "$MinerID" == "$User" ] && MinerID=""
         [ "$Area" == "$User" ] && User=""
-        ReplaceMinerIDArray["${MinerID}.*${Area}.*$User"]="$MinerID"
-        ReplaceIPArray["${MinerID}.*${Area}.*$User"]="$IP"
-        ReplacePortArray["${MinerID}.*${Area}.*$User"]="$Port"
-        ReplaceAreaArray["${MinerID}.*${Area}.*$User"]="$Area"
-        ReplaceUserArray["${MinerID}.*${Area}.*$User"]="$User"
+	#定义元素的索引值
+	MatchingString="${MinerID}'.*'${Area}'.*'${User}"
+	#赋值到数组
+        ReplaceMinerIDArray["$MatchingString"]="$MinerID"
+        ReplaceIPArray["$MatchingString"]="$IP"
+        ReplacePortArray["$MatchingString"]="$Port"
+        ReplaceAreaArray["$MatchingString"]="$Area"
+        ReplaceUserArray["$MatchingString"]="$User"
 done < $ScriptDir/HKReplacelist
+#遍历数组的索引,更新列表
 for i in ${!ReplaceIPArray[*]}
 do
+	#定义数组的元素值到变量
 	MinerID=${ReplaceMinerIDArray[$i]}
 	Area=${ReplaceAreaArray[$i]}
 	User=${ReplaceUserArray[$i]}
+	#awk获取匹配的字段到变量
 	ReplaceIP=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $1}' $ScriptDir/$ServerList`
 	ReplacePort=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $2}' $ScriptDir/$ServerList`
+	#检查如果更新过的就跳过
+        [ "$ReplaceIP" == "${ReplaceIPArray[$i]}" -a "$ReplacePort" == "${ReplacePortArray[$i]}" ] && echo "$i $ReplaceIP/$ReplacePort 已更新" && continue
+	#sed更新匹配的行
         sed -i -e '/'$i'/s#'$ReplaceIP'#'${ReplaceIPArray[$i]}'#1' -e  '/'$i'/s#'$ReplacePort'#'${ReplacePortArray[$i]}'#2' $ScriptDir/$ServerList
+	#输出更新前后对应的字段
+	echo "$i     $ReplaceIP/$ReplacePort  ---> ${ReplaceIPArray[$i]}/${ReplacePortArray[$i]}"
 done
 #备份时间
 BakTime=`date +%Y%m%d%H%M%S`
@@ -80,6 +95,7 @@ do
       echo ${AllArray[$i]} >> windowlist
   fi
 done
+#更新自定义的hosts
 awk 'BEGIN{print "[alllist]"}''{print}' alllist |column -t > allhosts
 awk 'BEGIN{print "[gpulist]"}''{print}' gpulist |column -t > gpuhosts
 awk 'BEGIN{print "[lotuslist]"}''{print}' lotuslist |column -t > lotushosts
