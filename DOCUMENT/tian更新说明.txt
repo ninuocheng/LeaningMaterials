@@ -17,6 +17,7 @@ bash /data/titan-nft/deploy/deploy-titan-web.sh
 更新所对应的脚本
 cd /data/titan-nft/deploy
 官网：name: titan-web    https://www.titannet.io/ ----->    bash deploy-titan-web.sh
+name:  titan-test-web    https://0ed1939914914b8da7929d28a458cf08.container1.titannet.io  ------> bash deploy-titan-web.sh
 name:  huygens-dashboard-test1  https://test1.titannet.io/ ----->    bash deploy-huygens-dashboard-test1.sh
 name:  titan-storage https://storage.titannet.io -----> bash deploy-storage.sh
 name:  titan-storage1 https://storage1.titannet.io -----> bash deploy-storage1.sh
