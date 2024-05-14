@@ -3,7 +3,10 @@
 ScriptDir=`dirname $(readlink -f $0)`
 #机器列表
 ServerList="机器列表-Sheet1.csv"
+#更新列表
+UpdateList="updatelist"
 [ ! -f "$ScriptDir/$ServerList" ] && echo "$ScriptDir/$ServerList 不存在" && exit 1
+[ ! -f "$ScriptDir/$UpdateList" ] && echo "$ScriptDir/$UpdateList 不存在" && exit 2
 #定义关联数组
 declare -A ReplaceMinerIDArray
 declare -A ReplaceIPArray
@@ -21,24 +24,19 @@ do
         [ "$MinerID" == "$User" ] && MinerID=""
         [ "$Area" == "$User" ] && User=""
 	#定义元素的索引值
-	MatchingString="${MinerID}'.*'${Area}'.*'${User}"
+	MatchingString="${MinerID}.*${Area}.*${User}"
 	#赋值到数组
-        ReplaceMinerIDArray["$MatchingString"]="$MinerID"
         ReplaceIPArray["$MatchingString"]="$IP"
         ReplacePortArray["$MatchingString"]="$Port"
-        ReplaceAreaArray["$MatchingString"]="$Area"
-        ReplaceUserArray["$MatchingString"]="$User"
-done < $ScriptDir/HKReplacelist
+done < $ScriptDir/$UpdateList
 #遍历数组的索引,更新列表
 for i in ${!ReplaceIPArray[*]}
 do
-	#定义数组的元素值到变量
-	MinerID=${ReplaceMinerIDArray[$i]}
-	Area=${ReplaceAreaArray[$i]}
-	User=${ReplaceUserArray[$i]}
 	#awk获取匹配的字段到变量
-	ReplaceIP=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $1}' $ScriptDir/$ServerList`
-	ReplacePort=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $2}' $ScriptDir/$ServerList`
+	ReplaceIP=`awk -F',' '/'$i'/{print $1}' $ScriptDir/$ServerList`
+	ReplacePort=`awk -F',' '/'$i'/{print $2}' $ScriptDir/$ServerList`
+	#检查匹配的字段输出是否为空
+	[ -z "$ReplaceIP" -o -z "$ReplacePort" ] && echo "awk -F',' '/'$i'/{print \$1,\$2}' $ScriptDir/$ServerList 输出为空" && continue
 	#检查如果更新过的就跳过
         [ "$ReplaceIP" == "${ReplaceIPArray[$i]}" -a "$ReplacePort" == "${ReplacePortArray[$i]}" ] && echo "$i $ReplaceIP/$ReplacePort 已更新" && continue
 	#sed更新匹配的行

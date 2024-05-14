@@ -3,9 +3,12 @@
 ScriptDir=`dirname $(readlink -f $0)`
 #机器列表
 ServerList="机器列表-Sheet1.csv"
+#更新列表
+UpdateList="updatelist"
 [ ! -f "$ScriptDir/$ServerList" ] && echo "$ScriptDir/$ServerList 不存在" && exit 1
+[ ! -f "$ScriptDir/$UpdateList" ] && echo "$ScriptDir/$UpdateList 不存在" && exit 2
 #遍历更新的列表
-awk '{print $1,$2,$3,$4,$5}' $ScriptDir/HKReplacelist |while read MinerID IP Port Area User
+awk '{print $1,$2,$3,$4,$5}' $ScriptDir/$UpdateList |while read MinerID IP Port Area User
 do
 	#字段中如果有特殊符号，需要去掉，不然会影响awk匹配异常
 	Area=${Area%(*}
@@ -15,10 +18,15 @@ do
 	[ "$MinerID" == "$User" ] && MinerID=""
 	[ "$Area" == "$User" ] && User=""
 	#sed匹配的字段
-	MatchingString="${MinerID}'.*'${Area}'.*'${User}"
+	MatchingString="${MinerID}.*${Area}.*${User}"
 	#awk获取匹配到的字段
-	ReplaceIP=$(awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/ {print $1}' $ScriptDir/$ServerList)
-	ReplacePort=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/ {print $2}' $ScriptDir/$ServerList`
+	#ReplaceIP=$(awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $1}' $ScriptDir/$ServerList)
+	#ReplacePort=`awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print $2}' $ScriptDir/$ServerList`
+	ReplaceIP=$(awk -F',' '/'$MatchingString'/{print $1}' $ScriptDir/$ServerList)
+	ReplacePort=`awk -F',' '/'$MatchingString'/{print $2}' $ScriptDir/$ServerList`
+	#检查匹配的字段输出是否为空
+        #[ -z "$ReplaceIP" -o -z "$ReplacePort" ] && echo "awk -F',' '/'$MinerID'/&&/'$Area'/&&/'$User'/{print \$1,\$2}' $ScriptDir/$ServerList 输出为空" && continue
+        [ -z "$ReplaceIP" -o -z "$ReplacePort" ] && echo "awk -F',' '/'$MinerID'.*'$Area'.*'$User'/{print \$1,\$2}' $ScriptDir/$ServerList 输出为空" && continue
 	#检查如果更新过的就跳过
 	[ "$ReplaceIP" == "$IP" -a "$ReplacePort" == "$Port" ] && echo "$MatchingString $ReplaceIP/$ReplacePort 已更新" && continue
 	#sed更新匹配到的字段
