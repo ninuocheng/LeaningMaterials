@@ -8,6 +8,10 @@ AfterWorkS=01
 AfterWorkTimeStamp=$(date +%s -d "$AfterWorkDate $AfterWorkH:$AfterWorkM:$AfterWorkS")
 #当前的时间戳
 CurrentTimeStamp=$(date +%s -d "`date +%Y%m%d\ %H:%M:%S`")
+#定义默认值
+DistanceH=${DistanceH:-0}
+DistanceM=${DistanceM:-0}
+DistanceS=${DistanceS:-0}
 #距离下班的时间戳差值
 DValue=$[AfterWorkTimeStamp - CurrentTimeStamp]
 if [ $AfterWorkTimeStamp -lt $CurrentTimeStamp ];then
@@ -20,7 +24,8 @@ if [ $AfterWorkTimeStamp -lt $CurrentTimeStamp ];then
 	DistanceM=$[DValue/60] && DistanceS=$[DValue%60]
    fi
    echo "实际下班的时间:$AfterWorkH:$AfterWorkM:$AfterWorkS"
-   echo "下班了$DistanceTime"
+   echo "下班了$DistanceH时$DistanceM分$DistanceS秒"
+   exit 1
 else
    if [ $DValue -ge 3600 ];then
       DistanceH=$[DValue/3600] && DistanceS=$[DValue%3600]
@@ -30,9 +35,10 @@ else
         DistanceM=$[DValue/60] && DistanceS=$[DValue%60]
    fi
 fi
-h=${DistanceH:-0}
-m=${DistanceM:-0}
-s=${DistanceS:-0}
+#定义变量
+h=$DistanceH
+m=$DistanceM
+s=$DistanceS
 #清屏
 clear
 #嵌套循环
