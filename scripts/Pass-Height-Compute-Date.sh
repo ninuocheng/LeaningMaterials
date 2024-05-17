@@ -18,6 +18,6 @@ do
 	BlockHeightExpirationDate=`date -d @$TimeStampBlockHeight +"%Y-%m-%d %H:%M:%S"`
 	echo "${BlockHeight}的日期时间：$BlockHeightExpirationDate"
 	#let ExpirationTime=(BlockHeight-LatestBlockHeight)/2880 注释：let计算取值为整数
-	#ExpirationTime=`echo "scale=5;($BlockHeight - $LatestBlockHeight)/2880" |bc`
-	#echo "区块高度${BlockHeight}的过期时间天数：${ExpirationTime}天"
+	ExpirationTime=`echo "scale=5;($BlockHeight - $LatestBlockHeight)/2880" |bc`
+	echo "区块高度${BlockHeight}的过期时间天数：${ExpirationTime}天"
 done
