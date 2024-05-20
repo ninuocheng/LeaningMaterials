@@ -1,0 +1,35 @@
+#!/bin/bash
+#定义的消息文件
+MPoolMessageInfo="/tmp/MpoolMessageInfo"
+#刷新环境变量
+source /opt/raid0/profile
+#检查jq是否安装
+dpkg -s jq  &>/dev/null || apt -y install jq
+#导出消息到文件
+lotus mpool pending --local |jq -r '.Message|.To,.Method,.CID."/"' > $MPoolMessageInfo
+#消息上链需要一定的时间
+[ -s "$MPoolMessageInfo" ] && sleep 60s || exit 1
+#刷新导出消息的文件
+lotus mpool pending --local |jq -r '.Message|.To,.Method,.CID."/"' > $MPoolMessageInfo
+#记录时间
+[ -s "$MPoolMessageInfo" ] && date +%F%\t%T || exit 2
+#遍历导出的消息
+while [ -s "$MPoolMessageInfo" ]
+do
+	#接收方
+	Receiver=$(awk 'NR==1' $MPoolMessageInfo)
+	#消息类型
+	Method=$(awk 'NR==2' $MPoolMessageInfo)
+	#消息的CID
+	CID=$(awk 'NR==3' $MPoolMessageInfo)
+	#删除前三行
+	sed -i '1,3d' $MPoolMessageInfo
+	#如果满足是5类消息，就自动疏通
+	if [ "$Method" -eq 5 ];then
+		lotus mpool replace --auto --fee-limit 0.3 $CID && echo "$Receiver $Method类消息的CID: $CID 已疏通"
+	else
+		echo "$Receiver $Method类消息的CID: $CID 不满足条件，无需操作"
+	fi
+done
+echo ""
+exit 3
