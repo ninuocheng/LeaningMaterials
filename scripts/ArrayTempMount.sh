@@ -1,6 +1,6 @@
 #!/bin/bash
 #脚本的路径
-ScriptDir="/root/.gzc"
+ScriptDir=$(dirname $(readlink -f $0))
 #备份时间
 BakTime=$(date +%Y%m%d-%H%M%S)
 #数据盘大小
