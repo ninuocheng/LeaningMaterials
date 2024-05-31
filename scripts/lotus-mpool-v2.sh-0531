@@ -26,26 +26,34 @@ awk '$7==5' $BeforeRefreshMessageInfo |sort |uniq -d > $MPoolMessageInfo
 #记录历史信息追加到文件，并记录时间
 echo "$(date +%F%\t%T)" &>> $HistoryInfo
 cat $MPoolMessageInfo &>> $HistoryInfo
-#疏通的次数
-n=0
 #遍历导出的消息
 while read Receiver Sender Nonce GasLimit GasFeeCap GasPremium Method CID
 do
-	while :
-	do
-		LimitFee="0.5" #疏通限定的数值,如果疏通因为gas的波动超出限定的数值而导致的失败，会进行再次的疏通
+	LimitFee="0.008" #第1次疏通限定的数值,如果第一次疏通因为gas的波动超出限定的数值而导致的失败，会进行再次的疏通
+	echo "$Receiver的Nonce:$Nonce第1次疏通: lotus mpool replace --auto --fee-limit $LimitFee $CID" &>> $LogFile
+	lotus mpool replace --auto --fee-limit $LimitFee $CID &>> $LogFile && {
+		echo "$Receiver $Method类消息的CID: $CID 的 Nonce: $Nonce 已疏通(限定的--fee-limit: $LimitFee)" &>> $LogFile
+	}||{
+		if grep -wq "no pending message found from $Sender with nonce $Nonce" $LogFile;then
+			continue
+		fi
+		sleep 15s
+		LimitFee="0.2" #第2次疏通限定的数值
+		echo "$Receiver的Nonce:$Nonce第2次疏通: lotus mpool replace --auto --fee-limit $LimitFee $CID" &>> $LogFile
 		lotus mpool replace --auto --fee-limit $LimitFee $CID &>> $LogFile && {
-			let n++
-			echo "第${n}次: $Receiver $Method类消息的CID: $CID 的 Nonce: $Nonce 已疏通(限定的--fee-limit: $LimitFee)" &>> $LogFile
-			break
+			echo "$Receiver $Method类消息的CID: $CID 的 Nonce: $Nonce 已疏通(限定的--fee-limit: $LimitFee)" &>> $LogFile
 		}||{
 			if grep -wq "no pending message found from $Sender with nonce $Nonce" $LogFile;then
-				break
+				continue
 			fi
 			sleep 15s
-			continue
+			LimitFee="0.5" #第3次疏通限定的数值
+			echo "$Receiver的Nonce:$Nonce第3次疏通: lotus mpool replace --auto --fee-limit $LimitFee $CID" &>> $LogFile
+			lotus mpool replace --auto --fee-limit $LimitFee $CID &>> $LogFile && {
+				echo "$Receiver $Method类消息的CID: $CID 的 Nonce: $Nonce 已疏通(限定的--fee-limit: $LimitFee)" &>> $LogFile
+			}
 		}
-	done
+	}
 done < $MPoolMessageInfo
 #结束时间
 end=$(date +%s)
