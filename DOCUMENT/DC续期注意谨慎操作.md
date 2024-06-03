@@ -9,3 +9,9 @@ lotus-miner sectors check-expire --cutoff=2880000000 > 1.txt
 awk '$11 == 4305400{print}' 1.txt
 #查看有效扇区过期高度的扇区数量，$11是过期高度
 awk 'NR>1{sum[$11]++}END{for(i in sum)print i,sum[i]}' 1.txt
+#查询DataCap的剩余额度
+lotus filplus check-client-datacap f01940441 |awk '{print $1/1024/1024/1024"GB"}'
+#回收额度
+lotus filplus remove-expired-allocations f1gk7n4ckn23ix2bu7q6qtas6eayambn57ass2zfq
+#查看节点的LDN
+lotus filplus list-claims f0503420
