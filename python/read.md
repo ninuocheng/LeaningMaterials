@@ -1,0 +1,2 @@
+1.parameters是参数文件,参数中的miner是节点号，days是要过去的天数到当前,pages是爬取的页码数,method是消息类型
+2.双击burn应用程序

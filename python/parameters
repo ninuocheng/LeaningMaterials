@@ -1,0 +1,21 @@
+# 消息的类型
+# 0: "Approve"
+# 1: "ChangeMultiaddrs"
+# 2: "ChangeOwnerAddress"
+# 3: "ChangePeerID"
+# 4: "ChangeWorkerAddress"
+# 5: "CreateMiner"
+# 6: "DeclareFaultsRecovered"
+# 7: "ExtendSectorExpiration2"
+# 8: "PreCommitSector"
+# 9: "PreCommitSectorBatch2"
+# 10: "ProveCommitSector"
+# 11: "Send"
+# 12: "SubmitWindowedPoSt"
+# 13: "TerminateSectors"
+{
+    'miner': ['f02236965'], # 节点列表
+    'days': 0, # 0表示当天，-1表示过去的一天到当天，-2表示过去的两天到当天，以此类推
+    'pages': 5, # 爬取的页码数
+    'method': 'SubmitWindowedPoSt' # 消息的类型
+}
