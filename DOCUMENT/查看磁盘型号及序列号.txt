@@ -1,0 +1,49 @@
+查看磁盘型号及序列号
+root@lotus-172-26-1-2:~# lsblk -do name,size,model,rota,serial
+NAME      SIZE MODEL                                    ROTA SERIAL
+sda     446.6G PERC H330 Mini                              1 62cea7f0b9bff000289471e207859600
+nvme0n1   3.5T SAMSUNG MZQL23T8HCLS-00B7C                  0 S63UNE0R400781
+nvme1n1   3.5T SAMSUNG MZQL23T8HCLS-00B7C                  0 S63UNE0R401204
+nvme2n1   3.5T SAMSUNG MZQL23T8HCLS-00B7C                  0 S63UNE0R401109
+nvme3n1   3.5T SAMSUNG MZQL23T8HCLS-00B7C                  0 S63UNE0R401222
+
+查看服务器电源是单路还是双路
+root@lotus-172-26-1-2:~# dmidecode -t 39
+# dmidecode 3.1
+Getting SMBIOS data from sysfs.
+SMBIOS 3.3.0 present.
+# SMBIOS implementations newer than version 3.1.1 are not
+# fully supported by this version of dmidecode.
+
+Handle 0x2700, DMI type 39, 22 bytes
+System Power Supply
+        Location: Not Specified
+        Name: PWR SPLY,1600W,RDNT,DELTA     
+        Manufacturer: DELL
+        Serial Number: CNDED0015V1QO6
+        Asset Tag: Not Specified
+        Model Part Number: 095HR5A05
+        Revision: Not Specified
+        Max Power Capacity: 1600 W
+        Status: Present, Unknown
+        Type: Unknown
+        Input Voltage Range Switching: Unknown
+        Plugged: Yes
+        Hot Replaceable: Yes
+
+Handle 0x2701, DMI type 39, 22 bytes
+System Power Supply
+        Location: Not Specified
+        Name: PWR SPLY,1600W,RDNT,DELTA     
+        Manufacturer: DELL
+        Serial Number: CNDED0015V1QOC
+        Asset Tag: Not Specified
+        Model Part Number: 095HR5A05
+        Revision: Not Specified
+        Max Power Capacity: 1600 W
+        Status: Present, Unknown
+        Type: Unknown
+        Input Voltage Range Switching: Unknown
+        Plugged: Yes
+        Hot Replaceable: Yes
+以上查询的结果是双路电源

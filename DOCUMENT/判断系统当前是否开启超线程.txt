@@ -1,0 +1,61 @@
+判断系统当前是否开启超线程
+如果系统没有开启超线程，系统cpu线程数=物理cpu个数 * 每个cpu的逻辑核数 * 1
+如果系统开启了超线程，系统cpu线程数=物理cpu个数 * 每个cpu的逻辑核数 * 2
+
+查看物理cpu的个数
+root@ops:~# cat /proc/cpuinfo |grep "physical id" |sort |uniq -c   #两个cpu
+     64 physical id     : 0
+     64 physical id     : 1
+查看单个物理cpu的逻辑核数
+root@ops:~# cat /proc/cpuinfo |grep "cores" |uniq -c  #每个cpu是64核
+    128 cpu cores       : 64
+查看系统cpu线程数
+root@ops:~# cat /proc/cpuinfo |grep "processor" -c  #64x2=128，未开启超线程
+128
+
+查看物理cpu数
+root@f0753213-p1-172-25-11-34:~# cat /proc/cpuinfo |grep "physical id" |sort |uniq -c    #两个cpu
+     32 physical id     : 0
+     32 physical id     : 1
+查看单个cpu的逻辑核心数
+root@f0753213-p1-172-25-11-34:~# cat /proc/cpuinfo |grep "cores" |uniq -c  #每个cpu是16核
+     64 cpu cores       : 16
+查看系统cpu线程数
+root@f0753213-p1-172-25-11-34:~# cat /proc/cpuinfo |grep "processor" -c   #16x2x2=64，开启了超线程
+64
+
+CPU个数、CPU核数和CPU逻辑核数的关系
+物理CPU数（physical id）：主板上实际插入的cpu数量，可以数不重复的 physical id 有几个
+CPU核心数（cpu cores）：单块CPU上面能处理数据的芯片组的数量，如双核、四核、八核等
+逻辑CPU数：
+　　逻辑CPU=物理CPU个数×每颗核数     　　#不支持超线程技术或没有开启超线程技术
+
+　　逻辑CPU=物理CPU个数×每颗核数 *2  　  #表示服务器的CPU支持超线程技术
+
+
+如果有两个逻辑CPU具有相同的"core id"，那么超线程是打开的。可以根据以下原则,来判断是否支持HT技术。
+如果"siblings"和"cpu cores"一致，则说明不支持超线程，或者超线程未打开。
+如果"siblings"是"cpu cores"的两倍，则说明支持超线程，并且超线程已打开
+cat /proc/cpuinfo |grep "sibling"|uniq
+cat /proc/cpuinfo | grep "cpu cores"|uniq
+
+siblings       ：单个物理CPU的逻辑CPU数。
+cpu cores    ：该逻辑核所处CPU的物理核数
+
+确认CPU是否启用了超线程
+cat /proc/cpuinfo | grep -e "cpu cores"  -e "siblings" | sort | uniq
+如果cpu cores数量和siblings数量一致，则没有启用超线程，否则超线程被启用。
+
+
+1.孤立配置
+vim /etc/default/grub 
+在此行内容追加 GRUB_CMDLINE_LINUX="isolcpus=28,29,30,31,32,33,34,35" 隔离28-35核心
+2.更新配置
+update-grub
+或者
+grub2-mkconfig -o /boot/grub2/grub.cfg 更新配置
+3. reboot 重启
+4. cat /proc/cmdline 查看结果
+5. 使用孤立CPU
+taskset -c 28,29,30,31 python xx.py
+taskset -pc pid 确认哪些cpu被孤立了

@@ -1,0 +1,27 @@
+---
+#- hosts: 40units-p1
+#- hosts: f02229760-p1
+#- hosts: f02236965-p1
+#- hosts: f01777770-p1
+- hosts: 172.25.9.93
+#- hosts: f02836091-p1
+#- hosts: f0753213-p1
+#- hosts: f02836080-p1
+#- hosts: f01777777-p1
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: "拷贝主机上的文件到目标服务器上"
+       copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: "{{ item.mode }}"
+       with_items:
+            - { src: "/root/.guozhichao/playbook/P1StartScript/Numa6Core4/hugepages.sh", dest: "/etc/hugepages.sh", mode: "0755" }
+            - { src: "/root/.guozhichao/playbook/lotus-worker", dest: "/opt/lotusworker/lotus-worker", mode: "0755" }
+            - { src: "/root/.guozhichao/playbook/P1StartScript/Numa6Core4/start_p1.sh", dest: "/opt/lotusworker/worker-p1/start_p1.sh", mode: "0644" }
+            - { src: "/root/.guozhichao/playbook/P1StartScript/Numa6Core4/start_p2.sh", dest: "/opt/lotusworker/worker-p2/start_p2.sh", mode: "0644" }
+            - { src: "/root/.guozhichao/playbook/P1StartScript/Numa6Core4/start_apx.sh", dest: "/opt/lotusworker/worker-apx/start_apx.sh", mode: "0644" }
+            - { src: "/root/.guozhichao/playbook/P1StartScript/Numa6Core4/init_apx.sh", dest: "/opt/lotusworker/worker-apx/init_apx.sh", mode: "0644" }

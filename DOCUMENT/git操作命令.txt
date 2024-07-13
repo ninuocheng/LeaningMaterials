@@ -1,0 +1,198 @@
+设置项目级用户：
+进入项目根目录执行以下命令git config 配置命令
+git config user.name "Gzhichao"
+git config user.email "zhichaoguo75@gmail.com"
+二、开启将凭据缓存在系统中
+1.配置密码缓存
+git config credential.helper cache  #设置账号密码缓存在内存中，缓存时间为15分钟
+
+2.配置密码存储
+执行git config 命令配置
+git config credential.helper "store --file=/root/.guozhichao/LearningMaterials/git/Gzhichao"  #设置账号密码缓存在本地文件中
+vim .git/config
+[credential]
+        helper = store --file=/root/.guozhichao/LearningMaterials/git/Gzhichao  #--file指定密码存储的文件，如果不指定，默认存储在当前用户的家目录下的.git-credentials
+执行成功后可以使用以下命令来检查是否设置成功
+cat .git/config 或是 git config --list | grep credential
+
+三、拉取或推送一次缓存凭据
+        通过以上设置后使用以下任一命令，输入用户名和密码一次后会自动保存。下次再使用就不需要输入用户和密码了
+git pull origin master
+git push origin master
+
+更新文件内容的步骤
+1.vim 文件  #vim编辑更新文件内容或是echo追加重定向文件内容
+2.git diff 更新的文件  #对比更新的文件和仓库的区别
+3.git restore 更新的文件 #撤销更新的文件(如果要还原到更新前的文件，又不记得更新过什么内容了，可用此操作恢复)
+4.git add 更新的文件      #添加所有文件到暂存区
+5.git reset HEAD xxx  #撤销标记的文件，xxx是add的文件
+6.git status   #查看状态
+7.git branch #查看当前所在分支
+8.git commit -m "update file" #提交暂存区中的内容到本地仓库，update file是备注
+9.git push origin 分支名#推送代码到远程仓库，origin是远程仓库别名，推送分支，就是把该分支上的所有本地提交推送到远程库。推送时，要指定本地分支，这样，Git就会把该分支推送到远程库对应的远程分支上
+例子：
+git push origin main  #推送main本地分支的所有提交到远程仓库别名origin对应的远程分支上
+git push origin dev   #推送dev本地分支的所有提交到远程仓库别名origin对应的远程分支上
+
+删除文件的步骤
+1.git rm 文件1 文件2 #可以批量rm掉
+2.git commit -m "xxxx" #提交，xxxx是备注
+3.git push #推送到远程仓库
+
+合并分支到主分支的步骤
+1.git checkout main     #先切换到主分支
+2.git merge test     #然后合并本地仓库的分支到主分支，test是要合并到主分支的本地分支名 或是 git merge origin/test     #然后合并远程仓库的分支到主分支，origin/test是要合并到主分支的远程仓库的分支
+3.git push #最后推送到远程仓库
+
+修改分支名称的步骤
+1.git chechout -b xxx  #新建的同时切换到该分支
+2.git branch #查看本地分支
+3.git branch -r #查看远程分支
+4.git branch -a #查看本地和远程分支
+5.git branch -m xxx aaa #修改本地分支xxx为aaa  或是 git branch -m aaa(修改本地仓库的当前分支重名为aaa)
+6.git push -u origin aaa #推送修改的分支aaa到远程仓库,并将上游分支设置为aaa
+7.git push origin -d xxx #删除远程的分支xxx
+8.git branch -d aaa #删除本地的分支aaa
+9.git push --set-upstream origin aaa #本地分支关联远程分支
+版本的回滚
+1.git reflog或是git log #查看历史版本
+2.git reset --hard 版本号 #版本的回归
+
+创建分支
+1.git branch 分支名  #相当于对当前分支的复制
+
+合并分支
+git merge 需要合并的分支名  #把指定的分支合并到当前分支上
+
+创建git的新仓库test
+git init #初始化本地仓库
+touch README.md #创建文件
+git add README.md #添加到暂存区
+git commit -m "first commit" #提交到本地仓库
+git branch -M main #修改当前分支为main
+git remote add origin https://github.com/Gzhichao/test.git #添加远程仓库
+git push -u origin main #关联远程仓库
+存在的仓库test1
+git remote add origin https://github.com/Gzhichao/test1.git
+git branch -M main
+git push -u origin main
+
+修改远程库的方法1:
+1.git remote -v #查看远程仓库信息
+2.git remote remove origin #删除关联的origin
+3.git remote add origin https://github.com/Gzhichao/LearningMaterials.git（新的远程库) #添加新的远程仓库，origin是远程仓库别名，https://github.com/Gzhichao/LearningMaterials.git是远程仓库地址
+4.git branch #查看当前分支
+5.git push -u origin 当前分支名称 #推送新的分支到远程仓库关联，origin是远程仓库别名
+
+修改远程库的方法2:
+1.git remote -v #查看远程仓库信息
+2.git remote set-url origin https://github.com/Gzhichao/LearningMaterials.git (新的远程库) #设置新的远程库
+3.git branch #查看当前分支
+4.git push -u origin 当前分支名称  #推送新的分支到远程仓库关联
+设置push.default的值
+git config --global push.default simple   #matching模式会推送所有本地分支到远程仓库，simple或nothing模式只推送当前分支
+git config --list  #查看git设置的config
+
+添加token远程仓库链接，方便每次推送需要输入token
+git remote set-url origin https://<your_token>@github.com/Gzhichao/LearningMaterials.git #<your_token>换成token,Gzhichao是github的用户名,LearningMaterials是仓库名称
+
+远程分支操作
+git push -u origin 分支名:分支名  #origin是远程仓库别名
+
+远程仓库非空，本地库也有内容，如何同步本地库和远程仓库
+方法一：
+1.先clone远程仓库到本地
+2.然后更新本地的代码
+3.最后push推送到远程仓库
+方法二:
+git pull --allow-unrelated-histories 远程仓库别名  远程仓库分支
+git add .
+git push -u 远程仓库别名   分支名
+
+查看分支
+git branch 或是git branch -vv
+git branch  -r #查看远程仓库
+git remote show origin #查看远程库信息
+
+新建分支
+git branch 分支  #基于当前分支，新建一个副本分支
+git branch 新建分支  源分支  #基于源分支新建副本分支
+git switch -c 分支  #基于当前分支新建一个副本分支，并同时切换到新建的分支上
+git checkout -b 分支 #基于当前分支，新建一个副本分支，并同时切换到新建的分支上 和git switch -c 分支一样
+
+切换分支
+git switch 分支 或是 git checkout 分支
+
+删除本地分支
+git branch -d 分支
+
+删除远程库分支
+git push 远程库名 -d 分支名
+
+修改分支
+git branch -m 原分支 新分支
+
+新建远程分支
+git push 远程库名  本地分支名  #新建的本地分支，一开始是没有远程分支的
+git remote update origin --prune #更新远程库的分支信息（刷新）
+
+查看远程库信息的方法
+git remote -v #查看本地和远程库的关联信息
+git branch -vv #查看分支情况， 包括远程库分支和本地库分支的关联情况。 里面也有远程库的信息
+git remote show origin 
+cat .git/config
+
+关联本地库和远程库的方法：
+git remote add 远程库名 git远程库地址   #远程库一般别名是origin，也可以随意。建议默认用origin
+所以more的命令：git remote add origin git远程库地址
+git地址通常是ssh或是http。常用http
+ssh地址格式：
+git@托管平台:<你的用户名>/<远程项目名>.git  例子：git@github.com:Gzhichao/LearningNoteBook.git（本人自己的github）
+http地址格式：
+https://托管平台/<你的用户名>/<远程项目名>.git 例子：https://github.com/Gzhichao/LearningNoteBook.git
+
+删除远程库
+git remote rm 库名
+
+关联本地库分支和远程库分支的方法
+本地库和远程库分支建立了关联后，两者间的交互动作，例如：pull，push。进行交互时就不用指定各自的地址。即直接 git push， git pull就可以从远程库分支拉去代码到本地分支了，也方便后续的版本控制和回溯。
+git remote show 远程库名 #查看远程库信息
+git checkout -b 本地分支 远程分支 #创建一个本地分支，并和指定的远程分支关联，远程分支必须存在
+git fetch origin #如果关联分支有报错，是因为本地库创建分支时，是基于远程库分支的，所以需要进行网络交互。执行即可，否则跳过
+git branch -u origin/<分支名>  #关联当前本地分支和指定的远程分支
+git branch --set-upstream-to=origin/<分支名> <本地分支名>  #指定本地分支和指定的远程分支关联
+git push -u origin 分支名 #将当前分支的内容推送到远程分支，并建立关联
+
+但是，并不是一定要把本地分支往远程推送，那么，哪些分支需要推送，哪些不需要呢？
+main分支是主分支，因此要时刻与远程同步；
+dev分支是开发分支，团队所有成员都需要在上面工作，所以也需要与远程同步；
+bug分支只用于在本地修复bug，就没必要推到远程了，除非老板要看看你每周到底修复了几个bug；
+feature分支是否推到远程，取决于你是否和你的小伙伴合作在上面开发。
+总之，就是在Git中，分支完全可以在本地自己藏着玩，是否推送，视你的心情而定！
+
+抓取分支
+多人协作时，大家都会往main和dev分支上推送各自的修改。
+
+本人就自己的https://github.com/Gzhichao/LearningMaterials.git的简介:
+1.目前有四个分支，main是默认的主分支，dev是开发分支，bug是本地修复bug分支，feature是开发单个功能或解决某个问题的分支
+2.main,dev都有远程仓库，bug,feature目前没有设置远程仓库
+3.bug，feature提交到本地仓库，无需推送
+3.main，dev提交到本地仓库，还需要推送到远程仓库，如果要合并bug，feature本地分支，提交后再推送即可
+
+具体命令如下：
+就主分支main合并bug分支为例：
+1.git checkout bug #先切换到本地的bug分支
+2.git add .  #提交更新到暂存区
+3.git commit -m "update fix bug" #提交到分支的本地仓库
+4.git checkout main #切换到主分支main
+5.git pull origin main #合并前建议拉取最新的代码，避免冲突
+6.git merge bug #合并bug分支到当前主分支main
+7.git push origin main #推送最新的到远程仓库别名origin的主分支main
+
+小结
+      1、查看远程库信息，使用 git remote -v;
+      2、本地新建的分支如果不推送到远程，对其他人是不可见的;
+      3、在本地创建和远程分支对应的分支， 使用git checkout -b branch-name,本地和远程分支的名称最好一样
+      4、建立本地分支和远程分支的关联，使用git branch –set-upstream-to=origin/dev dev
+      5、从本地推送分支，使用git push origin branch-name，如果推送失败，用git  pull抓取远程的新提交
+      6、从远程抓取分支，使用git pull，如果有冲突，要先处理冲突

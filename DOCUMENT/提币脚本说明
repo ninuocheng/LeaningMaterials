@@ -1,0 +1,32 @@
+提币脚本说明：
+东莞灯塔主用lotus-172-25-5-62执行
+bash /root/.guozhichao/withdraw-filcoin.sh
+提币前的准备工作：
+比如f01179295提币4040.987
+切换到工作目录
+cd /root/.guozhichao
+过滤要提币的节点号追加到提币的参数文件withdraw.conf
+grep f01179295 template >> withdraw.conf
+#矿工ID         多签地址                  多签发起地址                提币整数位                        提币小数位                 提币有效数位
+#f01179295      f01555459        f01450625            4040          000000000000000000     4040
+f01179295       f01555459        f01450625            4040          987000000000000000     4040.987
+执行提币的脚本
+bash withdraw-filcoin.sh
+
+转币脚本说明：
+东莞灯塔主用lotus-172-25-5-62执行
+bash /root/.guozhichao/send-filcoin.sh
+转币前的准备工作：
+比如f01416862转币到目标地址f1uchoqvqt27jyjghojdnsupdcgk2r5qsjusocmdi  98.31
+切换到工作目录
+cd  /root/.guozhichao
+过滤要转币的节点号追加到转币的参数文件send.conf
+grep f01416862 template >> send.conf
+#矿工ID         多签地址                多签发起地址                                                  到账地址                                             转币整数位                      转币小数位               转币有效数位
+f01416862      f01555620        f01450625         f1uchoqvqt27jyjghojdnsupdcgk2r5qsjusocmdi         98          310000000000000000       98.31
+执行转币的脚本
+bash  send-filcoin.sh
+
+备注：template文件是事先准备好的节点号，省去查找的时间，对于没有的，就需要链上或者命令等的形式查找，然后按照模板的样子就可以了
+不管提币或者转币，需要本地有发起签名地址的密钥方可进行操作，运维主要是发起一方的签名地址，涛哥主要是审批一方的签名地址，哈儿主要是通知客户审批一方的签名地址
+针对转币的脚本，需要确认有币可转，最好确认好之后进行转币的操作

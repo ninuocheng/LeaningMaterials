@@ -1,0 +1,22 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: false
+  tasks:
+     - name: Creates directory
+       file:
+           path: /root/.gzc
+           state: directory
+     - name: "拷贝主机上的文件到目标服务器上"
+       copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: 0644
+       with_items:
+            - { src: "/root/.guozhichao/MachineList/addkey.yaml", dest: "/root/.gzc/addkey.yaml" }
+            - { src: "/root/.guozhichao/MachineList/delkey.yaml", dest: "/root/.gzc/delkey.yaml" }
+            - { src: "/root/.guozhichao/MachineList/sshd_config", dest: "/root/.gzc/sshd_config" }
+            - { src: "/root/.guozhichao/MachineList/UpdateKey.sh", dest: "/root/.gzc/UpdateKey.sh" }
+            - { src: "/root/.guozhichao/MachineList/changepasswd.yaml", dest: "/root/.gzc/changepasswd.yaml" }

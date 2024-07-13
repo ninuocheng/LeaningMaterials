@@ -1,0 +1,43 @@
+首先启动P1，然后启动P2C2，最后启动APX
+
+root@f01530777-p1-10-2-6-182:~# cat /opt/lotusworker/worker-apx/storage.json 
+{
+  "StoragePaths": [
+    {
+      "Path": "/opt/raid0/workercache"
+    }
+  ]
+}
+如果/opt/raid0/workercache没有初始化，就执行bash /opt/lotusworker/worker-apx/init_apx.sh
+封装相关问题处理
+封装过程中处理故障扇区或者订单已过期的扇区，首先查询该扇区的位置，
+
+比如PreCommitWait状态的扇区异常，需要处理
+首先查询该状态的扇区ID
+root@f01530777-miner-10-2-6-184:~# lotus-miner sectors list --states PreCommitWait
+ID    State          OnChain  Active  Expiration  Deals  DealWeight  VerifiedPower  
+5827  PreCommitWait  NO       NO      n/a         1      [32GiB]     [288GiB]
+
+然后查询扇区的位置
+root@f01530777-miner-10-2-6-184:~# lotus-miner sectors status 5827
+SectorID:       5827
+Status:         PreCommitWait
+CIDcommD:       baga6ea4seaqcgr7kdy6g2scyufwl7vybx6dhazyne7hoyqaevuz7wkdqfqj52eq
+CIDcommR:       bagboea4b5abcbccwt3gpcp2ovkruoanc4u52djura5fjbd6e6vgca3gz3uow5gtj
+Ticket:         de7be67ef0b237090974cafade12be19912d74f11fbd1b274863faf8bd8f602e
+TicketH:        2841932
+Seed:
+SeedH:          0
+Precommit:      bafy2bzacecanmk43v2jsxowctxc55d3z7xwpfic7fywwuf3msy5hjz47wyjy6
+Commit:         <nil>
+Deals:          [35587003]
+Retries:        0
+HasFinalized:   false
+SealGroupID:    10.2.6.183
+
+登录到10.2.6.183算力机停掉该状态的程序
+miner这是查询扇区信息会有fail状态的扇区
+查询fail状态的扇区ID
+lotus-miner sectors list --states fail状态的扇区
+删除fail状态的扇区
+lotus-miner sectors remove --really-do-it fail状态的扇区ID
