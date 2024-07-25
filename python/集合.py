@@ -1,0 +1,17 @@
+# s = {19,20,30}
+# print(s,id(s),type(s))
+# s.add(780)
+# print(s,id(s),type(s))
+# s.update([100,200,300])
+# print(s,id(s),type(s))
+# s.remove(100)
+# print(s)
+# s.discard(500)
+# print(s)
+# s.discard(600)
+# print(s)
+# s.discard(300)
+# print(s)
+# d = {'zhansan': 165,'lisi': 175,'wangwu': 187}
+# print(d['zhansan'])
+# print(s,type(s),len(s))
